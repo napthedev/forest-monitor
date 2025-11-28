@@ -1,5 +1,6 @@
 // Include necessary libraries for Arduino, WiFi, and Firebase
 #include "esp_wpa2.h" // Include WPA2 Enterprise library
+#include "secrets.h"
 #include <Arduino.h>
 #include <WiFi.h>
 #include <WiFiClientSecure.h> // Include WiFiClientSecure
@@ -10,15 +11,14 @@
 #include <FirebaseClient.h>
 
 // WiFi configuration for WPA2 Enterprise connection
-const char *ssid = "VinUni Students";
-const char *identity = "25phong.na@vinuni.edu.vn";
-const char *username = "25phong.na@vinuni.edu.vn";
-const char *password = "Go2thegym*23*";
+const char *ssid = WIFI_SSID;
+const char *identity = WIFI_IDENTITY;
+const char *username = WIFI_USERNAME;
+const char *password = WIFI_PASSWORD;
 
 // Firebase configuration settings
-#define FIREBASE_HOST                                                          \
-  "https://gen-lang-client-0454005386-default-rtdb.firebaseio.com"
-#define FIREBASE_AUTH "lIiTstCCnOImKMwvPMZkr80uZwn2BwcvjufR3zZn"
+#define FIREBASE_HOST FIREBASE_HOST_URL
+#define FIREBASE_AUTH FIREBASE_AUTH_TOKEN
 const char *FIREBASE_PATH = "/control/isLedOn";
 
 #define LED_PIN 2
