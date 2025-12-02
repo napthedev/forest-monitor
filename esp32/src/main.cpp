@@ -22,7 +22,12 @@ const char *password = WIFI_PASSWORD;
 
 // Sensor configuration
 #define LIGHT_SENSOR_PIN 36
+#define PIR_SENSOR_PIN 23
 #define SYNC_INTERVAL 5000 // 5 seconds
+
+// PIR sensor state tracking
+int pirState = LOW;
+int pirValue = 0;
 
 // Firebase client objects and authentication
 WiFiClientSecure ssl_client;
@@ -37,6 +42,9 @@ void setup() {
   // Initialize serial communication for debugging
   Serial.begin(115200);
   delay(1000);
+
+  // Initialize PIR sensor pin
+  pinMode(PIR_SENSOR_PIN, INPUT);
 
   Serial.println();
   Serial.print("Connecting to ");
@@ -92,6 +100,30 @@ void setup() {
 void loop() {
   // Maintain Firebase tasks
   app.loop();
+
+  // Read PIR sensor and push to Firebase when motion is detected
+  pirValue = digitalRead(PIR_SENSOR_PIN);
+  if (pirValue == HIGH) {
+    if (pirState == LOW) {
+      // Motion detected (transition from LOW to HIGH)
+      Serial.println("PIR: Motion detected!");
+      pirState = HIGH;
+
+      // Push motion event to Firebase with timestamp
+      if (app.ready()) {
+        object_t motion_json, ts_json;
+        JsonWriter writer;
+        writer.create(ts_json, "timestamp",
+                      object_t("{\".sv\":\"timestamp\"}"));
+        writer.join(motion_json, 1, ts_json);
+        Database.push<object_t>(aClient, "/sensors/motion", motion_json);
+      }
+    }
+  } else {
+    if (pirState == HIGH) {
+      pirState = LOW;
+    }
+  }
 
   // Read sensor and sync to Firebase every SYNC_INTERVAL
   static unsigned long lastSyncTime = 0;
