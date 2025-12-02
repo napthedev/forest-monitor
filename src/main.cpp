@@ -19,68 +19,24 @@ const char *password = WIFI_PASSWORD;
 // Firebase configuration settings
 #define FIREBASE_HOST FIREBASE_HOST_URL
 #define FIREBASE_AUTH FIREBASE_AUTH_TOKEN
-const char *FIREBASE_PATH = "/control/isLedOn";
 
-#define LED_PIN 2
+// Sensor configuration
+#define LIGHT_SENSOR_PIN 36
+#define SYNC_INTERVAL 1000 // 1 second
 
 // Firebase client objects and authentication
-WiFiClientSecure ssl_client, stream_ssl_client; // Use WiFiClientSecure directly
+WiFiClientSecure ssl_client;
 using AsyncClient = AsyncClientClass;
-AsyncClient aClient(ssl_client), streamClient(stream_ssl_client);
+AsyncClient aClient(ssl_client);
 LegacyToken legacy_token(FIREBASE_AUTH);
 FirebaseApp app;
 RealtimeDatabase Database;
 
-// Callback function to handle Firebase stream data and control LED
-void processData(AsyncResult &aResult) {
-  if (aResult.isEvent()) {
-    Serial.printf("Event task: %s, msg: %s, code: %d\n", aResult.uid().c_str(),
-                  aResult.eventLog().message().c_str(),
-                  aResult.eventLog().code());
-  }
-
-  if (aResult.isDebug()) {
-    Serial.printf("Debug task: %s, msg: %s\n", aResult.uid().c_str(),
-                  aResult.debug().c_str());
-  }
-
-  if (aResult.isError()) {
-    Serial.printf("Error task: %s, msg: %s, code: %d\n", aResult.uid().c_str(),
-                  aResult.error().message().c_str(), aResult.error().code());
-  }
-
-  if (aResult.available()) {
-    RealtimeDatabaseResult &stream = aResult.to<RealtimeDatabaseResult>();
-    if (stream.isStream()) {
-      Serial.println("----------------------------");
-      String streamData = stream.to<String>();
-      Serial.printf("Stream Data: %s\n", streamData.c_str());
-      Serial.printf("Path: %s\n", stream.dataPath().c_str());
-
-      if (streamData == "null") {
-        Serial.println("Received null data, ignoring...");
-        return;
-      }
-
-      bool isLedOn = stream.to<bool>();
-      Serial.printf("LED State: %s\n", isLedOn ? "ON" : "OFF");
-      digitalWrite(LED_PIN, isLedOn ? HIGH : LOW);
-    } else {
-      Serial.println("----------------------------");
-      Serial.printf("task: %s, payload: %s\n", aResult.uid().c_str(),
-                    aResult.c_str());
-    }
-  }
-}
-
-// Setup function: Initialize serial, LED, WiFi, and Firebase
+// Setup function: Initialize serial, WiFi, and Firebase
 void setup() {
   // Initialize serial communication for debugging
   Serial.begin(115200);
   delay(1000);
-
-  pinMode(LED_PIN, OUTPUT);
-  digitalWrite(LED_PIN, LOW);
 
   Serial.println();
   Serial.print("Connecting to ");
@@ -124,23 +80,38 @@ void setup() {
   Serial.printf("Firebase Client v%s\n", FIREBASE_CLIENT_VERSION);
 
   ssl_client.setInsecure();
-  stream_ssl_client.setInsecure();
 
   Serial.println("Initializing app...");
   initializeApp(aClient, app, getAuth(legacy_token));
 
   app.getApp<RealtimeDatabase>(Database);
   Database.url(FIREBASE_HOST);
-
-  // Start streaming
-  Database.get(streamClient, FIREBASE_PATH, processData, true /* SSE mode */);
 }
 
-// Loop function: Maintain Firebase authentication and stream, handle WiFi
-// reconnection
+// Loop function: Read sensor data, sync to Firebase, handle WiFi reconnection
 void loop() {
   // Maintain Firebase tasks
   app.loop();
+
+  // Read sensor and sync to Firebase every SYNC_INTERVAL
+  static unsigned long lastSyncTime = 0;
+  if (app.ready() && (millis() - lastSyncTime >= SYNC_INTERVAL)) {
+    lastSyncTime = millis();
+
+    // Read light sensor value
+    int lightValue = analogRead(LIGHT_SENSOR_PIN);
+    Serial.printf("Light sensor value: %d\n", lightValue);
+
+    // Create JSON with value and server timestamp
+    object_t json, val_json, ts_json;
+    JsonWriter writer;
+    writer.create(val_json, "value", lightValue);
+    writer.create(ts_json, "timestamp", object_t("{\".sv\":\"timestamp\"}"));
+    writer.join(json, 2, val_json, ts_json);
+
+    // Push to Firebase
+    Database.push<object_t>(aClient, "/sensors/light", json);
+  }
 
   // Check WiFi connection status periodically (every 5 seconds)
   static unsigned long lastWifiCheck = 0;
