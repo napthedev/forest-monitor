@@ -22,7 +22,7 @@ const char *password = WIFI_PASSWORD;
 
 // Sensor configuration
 #define LIGHT_SENSOR_PIN 36
-#define SYNC_INTERVAL 1000 // 1 second
+#define SYNC_INTERVAL 10000 // 10 second
 
 // Firebase client objects and authentication
 WiFiClientSecure ssl_client;
