@@ -23,7 +23,7 @@ const char *password = WIFI_PASSWORD;
 // Sensor configuration
 #define LIGHT_SENSOR_PIN 36
 #define PIR_SENSOR_PIN 23
-#define SYNC_INTERVAL 5000 // 5 seconds
+#define SYNC_INTERVAL 10000 // 10 seconds
 
 // PIR sensor state tracking
 int pirState = LOW;
