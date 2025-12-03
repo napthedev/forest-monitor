@@ -6,7 +6,14 @@ const FIREBASE_DATABASE_URL = process.env.FIREBASE_DATABASE_URL;
 const FIREBASE_AUTH_TOKEN = process.env.FIREBASE_AUTH_TOKEN;
 
 // Sensor paths to clean up
-const SENSOR_PATHS = ["light", "gas", "flame", "soil-moisture", "motion"];
+const SENSOR_PATHS = [
+  "light",
+  "gas",
+  "flame",
+  "soil-moisture",
+  "motion",
+  "sound",
+];
 
 // Records older than this many days will be deleted
 const RETENTION_DAYS = 3;

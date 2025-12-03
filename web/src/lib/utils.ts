@@ -91,34 +91,51 @@ export function getGasGradientColor(percentage: number | null): string {
   return "from-red-600 to-orange-500";
 }
 
+// Flame sensor threshold: raw value below this indicates fire
+// Raw value 0 = fire, 4095 = no fire
+export const FLAME_RAW_THRESHOLD = 1000;
+
 // Convert raw flame sensor value (0-4095) to percentage (0-100%)
-// Higher raw value = higher flame detection = higher percentage
+// 0 = fire detected (100%), 4095 = no fire (0%)
 export function convertToFlamePercentage(rawValue: number): number {
-  return Math.round((rawValue / 4095) * 100 * 10) / 10;
+  return Math.round(((4095 - rawValue) / 4095) * 100 * 10) / 10;
+}
+
+// Check if raw flame value indicates fire (below threshold)
+export function isFireDetected(rawValue: number): boolean {
+  return rawValue < FLAME_RAW_THRESHOLD;
+}
+
+// Get the percentage threshold for fire alert
+// This is the percentage equivalent of FLAME_RAW_THRESHOLD
+export function getFlameAlertThreshold(): number {
+  return Math.round(((4095 - FLAME_RAW_THRESHOLD) / 4095) * 100 * 10) / 10;
 }
 
 // Determine flame level description
 export function getFlameDescription(percentage: number | null): string {
   if (percentage === null) return "Unknown";
-  if (percentage < 15) return "Safe";
-  if (percentage < 40) return "Low Detection";
-  if (percentage < 70) return "Flame Detected";
+  const threshold = getFlameAlertThreshold();
+  if (percentage < 20) return "Safe";
+  if (percentage < 50) return "Low Detection";
+  if (percentage < threshold) return "Elevated";
   return "Fire Alert!";
 }
 
 // Get gradient color based on flame level
 export function getFlameGradientColor(percentage: number | null): string {
   if (percentage === null) return "from-gray-400 to-gray-500";
-  if (percentage < 15) return "from-green-600 to-emerald-500";
-  if (percentage < 40) return "from-yellow-600 to-amber-500";
-  if (percentage < 70) return "from-orange-600 to-red-500";
+  const threshold = getFlameAlertThreshold();
+  if (percentage < 20) return "from-green-600 to-emerald-500";
+  if (percentage < 50) return "from-yellow-600 to-amber-500";
+  if (percentage < threshold) return "from-orange-600 to-red-500";
   return "from-red-700 to-rose-600";
 }
 
 // Convert raw soil moisture sensor value (0-4095) to percentage (0-100%)
-// Higher raw value = higher moisture = higher percentage
+// Raw value 0 = high moisture (100%), 4095 = very dry (0%)
 export function convertToMoisturePercentage(rawValue: number): number {
-  return Math.round((rawValue / 4095) * 100 * 10) / 10;
+  return Math.round(((4095 - rawValue) / 4095) * 100 * 10) / 10;
 }
 
 // Determine soil moisture level description
@@ -139,4 +156,37 @@ export function getMoistureGradientColor(percentage: number | null): string {
   if (percentage < 70) return "from-amber-600 to-yellow-500";
   if (percentage < 90) return "from-yellow-600 to-amber-500";
   return "from-blue-600 to-cyan-500";
+}
+
+// Sound sensor alert threshold: percentage above which alert is shown
+export const SOUND_ALERT_THRESHOLD = 75;
+
+// Convert raw sound sensor value (0-4095) to percentage (0-100%)
+// Higher raw value = louder sound = higher percentage
+export function convertToSoundPercentage(rawValue: number): number {
+  return Math.round((rawValue / 4095) * 100 * 10) / 10;
+}
+
+// Check if sound level is above alert threshold
+export function isSoundAlert(percentage: number | null): boolean {
+  if (percentage === null) return false;
+  return percentage >= SOUND_ALERT_THRESHOLD;
+}
+
+// Determine sound level description
+export function getSoundDescription(percentage: number | null): string {
+  if (percentage === null) return "Unknown";
+  if (percentage < 25) return "Quiet";
+  if (percentage < 50) return "Moderate";
+  if (percentage < 75) return "Loud";
+  return "Very Loud";
+}
+
+// Get gradient color based on sound level
+export function getSoundGradientColor(percentage: number | null): string {
+  if (percentage === null) return "from-gray-400 to-gray-500";
+  if (percentage < 25) return "from-cyan-600 to-sky-500";
+  if (percentage < 50) return "from-cyan-500 to-teal-500";
+  if (percentage < 75) return "from-cyan-600 to-sky-600";
+  return "from-cyan-700 to-teal-600";
 }

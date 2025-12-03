@@ -27,6 +27,7 @@ const char *password = WIFI_PASSWORD;
 #define GAS_SENSOR_PIN 39
 #define FLAME_SENSOR_PIN 34
 #define SOIL_MOISTURE_SENSOR_PIN 35
+#define SOUND_SENSOR_PIN 32
 #define SYNC_INTERVAL 10000 // 10 seconds
 
 // PIR sensor state tracking
@@ -137,15 +138,18 @@ void loop() {
     int gasValue = analogRead(GAS_SENSOR_PIN);
     int flameValue = analogRead(FLAME_SENSOR_PIN);
     int soilMoistureValue = analogRead(SOIL_MOISTURE_SENSOR_PIN);
+    int soundValue = analogRead(SOUND_SENSOR_PIN);
 
-    Serial.printf("Light: %d, Gas: %d, Flame: %d, Soil: %d\n", lightValue,
-                  gasValue, flameValue, soilMoistureValue);
+    Serial.printf("Light: %d, Gas: %d, Flame: %d, Soil: %d, Sound: %d\n",
+                  lightValue, gasValue, flameValue, soilMoistureValue,
+                  soundValue);
 
     // Generate unique IDs locally for each sensor record
     String lightKey = generatePushId();
     String gasKey = generatePushId();
     String flameKey = generatePushId();
     String soilKey = generatePushId();
+    String soundKey = generatePushId();
 
     // Build batch update JSON string with all sensor records
     // Using multi-path update format: { "path1": value1, "path2": value2, ... }
@@ -161,6 +165,9 @@ void loop() {
                  ",\"timestamp\":{\".sv\":\"timestamp\"}},";
     batchJson += "\"/sensors/soil-moisture/" + soilKey +
                  "\":{\"value\":" + String(soilMoistureValue) +
+                 ",\"timestamp\":{\".sv\":\"timestamp\"}},";
+    batchJson += "\"/sensors/sound/" + soundKey +
+                 "\":{\"value\":" + String(soundValue) +
                  ",\"timestamp\":{\".sv\":\"timestamp\"}}";
     batchJson += "}";
 

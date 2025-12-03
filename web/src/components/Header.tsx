@@ -10,6 +10,7 @@ import {
   Cloud,
   Flame,
   Droplets,
+  Volume2,
 } from "lucide-react";
 
 interface NavLink {
@@ -48,6 +49,11 @@ const navLinks: NavLink[] = [
     href: "/soil-moisture",
     label: "Soil Moisture",
     icon: <Droplets className="w-5 h-5" />,
+  },
+  {
+    href: "/sound",
+    label: "Sound",
+    icon: <Volume2 className="w-5 h-5" />,
   },
 ];
 
@@ -106,6 +112,17 @@ const getRouteColors = (pathname: string) => {
       activeText: "text-amber-800",
       hoverBg: "hover:bg-amber-50",
       hoverText: "hover:text-amber-700",
+    };
+  }
+  if (pathname === "/sound") {
+    return {
+      border: "border-cyan-100",
+      logoIcon: "text-cyan-600",
+      logoGradient: "from-cyan-700 via-sky-600 to-teal-600",
+      activeBg: "bg-cyan-100",
+      activeText: "text-cyan-700",
+      hoverBg: "hover:bg-cyan-50",
+      hoverText: "hover:text-cyan-600",
     };
   }
   // Default: green theme for dashboard

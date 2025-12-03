@@ -10,6 +10,7 @@ import {
   Cloud,
   Flame,
   Droplets,
+  Volume2,
 } from "lucide-react";
 import { database } from "@/lib/firebase";
 import {
@@ -29,8 +30,12 @@ import {
   getGasDescription,
   convertToFlamePercentage,
   getFlameDescription,
+  getFlameAlertThreshold,
   convertToMoisturePercentage,
   getMoistureDescription,
+  convertToSoundPercentage,
+  getSoundDescription,
+  isSoundAlert,
 } from "@/lib/utils";
 
 interface LightSensorData {
@@ -51,6 +56,11 @@ interface FlameSensorData {
 interface SoilMoistureSensorData {
   timestamp: string;
   moisturePercentage: number;
+}
+
+interface SoundSensorData {
+  timestamp: string;
+  soundPercentage: number;
 }
 
 export default function Home() {
@@ -97,8 +107,22 @@ export default function Home() {
   >(null);
   const [moistureStatusText, setMoistureStatusText] = useState<string>("Live");
 
-  // Check if fire alert (percentage > 70)
-  const isFireAlert = currentFlame !== null && currentFlame > 70;
+  // Sound sensor state
+  const [soundData, setSoundData] = useState<SoundSensorData[]>([]);
+  const [currentSound, setCurrentSound] = useState<number | null>(null);
+  const [soundLoading, setSoundLoading] = useState(true);
+  const [lastSoundTimestamp, setLastSoundTimestamp] = useState<number | null>(
+    null
+  );
+  const [soundStatusText, setSoundStatusText] = useState<string>("Live");
+
+  // Check if fire alert (percentage >= threshold, which corresponds to raw value < 1000)
+  const flameAlertThreshold = getFlameAlertThreshold();
+  const isFireAlert =
+    currentFlame !== null && currentFlame >= flameAlertThreshold;
+
+  // Check if sound alert (percentage >= 75%)
+  const isSoundAlertActive = isSoundAlert(currentSound);
 
   // Helper function to get status text for analog sensors
   const getAnalogSensorStatus = (timestamp: number | null): string => {
@@ -179,6 +203,20 @@ export default function Home() {
 
     return () => clearInterval(interval);
   }, [lastMoistureTimestamp]);
+
+  // Update sound status text every second
+  useEffect(() => {
+    if (lastSoundTimestamp === null) return;
+
+    const updateStatus = () => {
+      setSoundStatusText(getAnalogSensorStatus(lastSoundTimestamp));
+    };
+
+    updateStatus();
+    const interval = setInterval(updateStatus, 1000);
+
+    return () => clearInterval(interval);
+  }, [lastSoundTimestamp]);
 
   // Update motion relative time every second
   useEffect(() => {
@@ -385,6 +423,48 @@ export default function Home() {
         }
       }
       setSoilMoistureLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Fetch sound sensor data (last 10 readings for preview)
+  useEffect(() => {
+    const sensorsRef = ref(database, "/sensors/sound");
+    const sensorsQuery = query(
+      sensorsRef,
+      orderByChild("timestamp"),
+      limitToLast(10)
+    );
+
+    const unsubscribe = onValue(sensorsQuery, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const formattedData: SoundSensorData[] = Object.entries(data).map(
+          ([, record]) => {
+            const { timestamp, value } = record as {
+              timestamp: number;
+              value: number;
+            };
+            return {
+              timestamp: String(timestamp),
+              soundPercentage: convertToSoundPercentage(value),
+            };
+          }
+        );
+
+        formattedData.sort(
+          (a, b) => parseInt(a.timestamp) - parseInt(b.timestamp)
+        );
+
+        setSoundData(formattedData);
+        if (formattedData.length > 0) {
+          const lastRecord = formattedData[formattedData.length - 1];
+          setCurrentSound(lastRecord.soundPercentage);
+          setLastSoundTimestamp(parseInt(lastRecord.timestamp));
+        }
+      }
+      setSoundLoading(false);
     });
 
     return () => unsubscribe();
@@ -886,6 +966,109 @@ export default function Home() {
                         } animate-pulse`}
                       />
                       {moistureStatusText}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </Link>
+
+          {/* Sound Sensor Card */}
+          <Link href="/sound" className="group">
+            <div
+              className={`bg-linear-to-br from-cyan-50 to-sky-50 rounded-3xl p-6 border shadow-lg transition-all duration-300 hover:scale-[1.02] h-full relative ${
+                isSoundAlertActive
+                  ? "border-cyan-500 shadow-cyan-200/70 animate-pulse"
+                  : "border-cyan-200 shadow-cyan-100/50 hover:shadow-xl hover:shadow-cyan-100/70"
+              }`}
+            >
+              {/* Sound Alert Badge */}
+              {isSoundAlertActive && (
+                <div className="absolute -top-2 -right-2 bg-cyan-600 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                  🔊 Loud
+                </div>
+              )}
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-linear-to-br from-cyan-500 to-sky-500 rounded-2xl flex items-center justify-center shadow-lg shadow-cyan-200">
+                  <Volume2 className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-800">
+                    Sound Sensor
+                  </h2>
+                  <p className="text-sm text-gray-500">Noise level detection</p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-cyan-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+
+              {soundLoading ? (
+                <div className="animate-pulse">
+                  <div className="h-24 bg-cyan-200 rounded-xl mb-4" />
+                  <div className="h-6 w-24 bg-cyan-200 rounded" />
+                </div>
+              ) : (
+                <>
+                  {/* Mini Chart Preview */}
+                  <div className="h-24 mb-4">
+                    {soundData.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={soundData}>
+                          <defs>
+                            <linearGradient
+                              id="colorSoundPreview"
+                              x1="0"
+                              y1="0"
+                              x2="0"
+                              y2="1"
+                            >
+                              <stop
+                                offset="5%"
+                                stopColor="#06b6d4"
+                                stopOpacity={0.6}
+                              />
+                              <stop
+                                offset="95%"
+                                stopColor="#06b6d4"
+                                stopOpacity={0.1}
+                              />
+                            </linearGradient>
+                          </defs>
+                          <Area
+                            type="monotone"
+                            dataKey="soundPercentage"
+                            stroke="#06b6d4"
+                            strokeWidth={2}
+                            fill="url(#colorSoundPreview)"
+                            dot={false}
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="h-full flex items-center justify-center text-gray-400 text-sm">
+                        No data available
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Current Value */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-3xl font-bold text-gray-800">
+                        {currentSound !== null ? `${currentSound}%` : "—"}
+                      </span>
+                      <span className="text-sm text-gray-500 ml-2">
+                        {getSoundDescription(currentSound)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-cyan-600">
+                      <span
+                        className={`w-2 h-2 rounded-full ${
+                          soundStatusText === "Live"
+                            ? "bg-cyan-500"
+                            : "bg-gray-400"
+                        } animate-pulse`}
+                      />
+                      {isSoundAlertActive ? "Loud!" : soundStatusText}
                     </div>
                   </div>
                 </>
