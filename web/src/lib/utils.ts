@@ -132,10 +132,11 @@ export function getFlameGradientColor(percentage: number | null): string {
   return "from-red-700 to-rose-600";
 }
 
-// Convert raw soil moisture sensor value (0-4095) to percentage (0-100%)
-// Raw value 0 = high moisture (100%), 4095 = very dry (0%)
+// Convert raw soil moisture sensor value to percentage (0-100%)
+// Clamp value to range 1600-3000, then map: 3000 = 0% (dry), 1600 = 100% (wet)
 export function convertToMoisturePercentage(rawValue: number): number {
-  return Math.round(((4095 - rawValue) / 4095) * 100 * 10) / 10;
+  const clampedValue = Math.max(1600, Math.min(3000, rawValue));
+  return Math.round(((3000 - clampedValue) / (3000 - 1600)) * 100 * 10) / 10;
 }
 
 // Determine soil moisture level description
