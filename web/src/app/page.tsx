@@ -11,6 +11,7 @@ import {
   Flame,
   Droplets,
   Volume2,
+  Mountain,
 } from "lucide-react";
 import { database } from "@/lib/firebase";
 import {
@@ -79,6 +80,14 @@ export default function Home() {
   );
   const [motionRelativeTime, setMotionRelativeTime] = useState<string>("");
   const [motionLoading, setMotionLoading] = useState(true);
+
+  // Vibration sensor state
+  const [lastVibrationTimestamp, setLastVibrationTimestamp] = useState<
+    number | null
+  >(null);
+  const [vibrationRelativeTime, setVibrationRelativeTime] =
+    useState<string>("");
+  const [vibrationLoading, setVibrationLoading] = useState(true);
 
   // Gas sensor state
   const [gasData, setGasData] = useState<GasSensorData[]>([]);
@@ -235,6 +244,23 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [lastMotionTimestamp]);
 
+  // Update vibration relative time every second
+  useEffect(() => {
+    if (lastVibrationTimestamp === null) return;
+
+    const updateVibrationRelativeTime = () => {
+      setVibrationRelativeTime(formatRelativeTime(lastVibrationTimestamp));
+    };
+
+    // Update immediately
+    updateVibrationRelativeTime();
+
+    // Update every second
+    const interval = setInterval(updateVibrationRelativeTime, 1000);
+
+    return () => clearInterval(interval);
+  }, [lastVibrationTimestamp]);
+
   // Fetch light sensor data (last 10 readings for preview)
   useEffect(() => {
     const sensorsRef = ref(database, "/sensors/light");
@@ -297,6 +323,31 @@ export default function Home() {
         }
       }
       setMotionLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Fetch vibration sensor data (last event only)
+  useEffect(() => {
+    const sensorsRef = ref(database, "/sensors/vibration");
+    const sensorsQuery = query(
+      sensorsRef,
+      orderByChild("timestamp"),
+      limitToLast(1)
+    );
+
+    const unsubscribe = onValue(sensorsQuery, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const entries = Object.entries(data);
+        if (entries.length > 0) {
+          const [, record] = entries[0];
+          const { timestamp } = record as { timestamp: number };
+          setLastVibrationTimestamp(timestamp);
+        }
+      }
+      setVibrationLoading(false);
     });
 
     return () => unsubscribe();
@@ -673,6 +724,92 @@ export default function Home() {
                       />
                       {lastMotionTimestamp &&
                       Date.now() - lastMotionTimestamp < 60000
+                        ? "Active"
+                        : "Monitoring"}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </Link>
+
+          {/* Vibration Sensor Card */}
+          <Link href="/vibration" className="group">
+            <div className="bg-linear-to-br from-zinc-50 to-slate-50 rounded-3xl p-6 border border-zinc-200 shadow-lg shadow-zinc-100/50 hover:shadow-xl hover:shadow-zinc-100/70 transition-all duration-300 hover:scale-[1.02] h-full">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-linear-to-br from-zinc-600 to-slate-700 rounded-2xl flex items-center justify-center shadow-lg shadow-zinc-200">
+                  <Mountain className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-800">
+                    Vibration Sensor
+                  </h2>
+                  <p className="text-sm text-gray-500">Ground vibration</p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-zinc-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+
+              {vibrationLoading ? (
+                <div className="animate-pulse">
+                  <div className="h-24 bg-zinc-200 rounded-xl mb-4" />
+                  <div className="h-6 w-32 bg-zinc-200 rounded" />
+                </div>
+              ) : (
+                <>
+                  {/* Vibration Visual */}
+                  <div className="h-24 mb-4 flex items-center justify-center">
+                    <div className="relative">
+                      <div
+                        className={`absolute inset-0 rounded-full ${
+                          lastVibrationTimestamp &&
+                          Date.now() - lastVibrationTimestamp < 60000
+                            ? "bg-slate-500/30 animate-ping"
+                            : ""
+                        }`}
+                        style={{ width: "80px", height: "80px" }}
+                      />
+                      <div className="w-20 h-20 rounded-full bg-linear-to-br from-zinc-100 to-slate-100 flex items-center justify-center relative">
+                        <Mountain
+                          className={`w-10 h-10 ${
+                            lastVibrationTimestamp &&
+                            Date.now() - lastVibrationTimestamp < 60000
+                              ? "text-slate-700"
+                              : "text-zinc-500"
+                          }`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Last Vibration Info */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      {lastVibrationTimestamp ? (
+                        <>
+                          <span className="text-lg font-bold text-gray-800">
+                            Last detected
+                          </span>
+                          <span className="text-zinc-600 font-medium ml-2">
+                            {vibrationRelativeTime}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-gray-500">
+                          No vibration detected
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-zinc-600">
+                      <span
+                        className={`w-2 h-2 rounded-full ${
+                          lastVibrationTimestamp &&
+                          Date.now() - lastVibrationTimestamp < 60000
+                            ? "bg-slate-600"
+                            : "bg-zinc-500"
+                        } animate-pulse`}
+                      />
+                      {lastVibrationTimestamp &&
+                      Date.now() - lastVibrationTimestamp < 60000
                         ? "Active"
                         : "Monitoring"}
                     </div>

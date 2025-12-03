@@ -24,15 +24,25 @@ const char *password = WIFI_PASSWORD;
 // Sensor configuration
 #define LIGHT_SENSOR_PIN 36
 #define PIR_SENSOR_PIN 23
+#define VIBRATION_SENSOR_PIN 22
 #define GAS_SENSOR_PIN 39
 #define FLAME_SENSOR_PIN 34
 #define SOIL_MOISTURE_SENSOR_PIN 35
 #define SOUND_SENSOR_PIN 32
 #define SYNC_INTERVAL 10000 // 10 seconds
 
+// Debounce interval for event-based sensors (3 seconds)
+#define EVENT_DEBOUNCE_MS 3000
+
 // PIR sensor state tracking
 int pirState = LOW;
 int pirValue = 0;
+unsigned long lastMotionEventTime = 0;
+
+// Vibration sensor state tracking
+int vibrationState = LOW;
+int vibrationValue = 0;
+unsigned long lastVibrationEventTime = 0;
 
 // Firebase client objects and authentication
 WiFiClientSecure ssl_client;
@@ -50,6 +60,9 @@ void setup() {
 
   // Initialize PIR sensor pin
   pinMode(PIR_SENSOR_PIN, INPUT);
+
+  // Initialize vibration sensor pin
+  pinMode(VIBRATION_SENSOR_PIN, INPUT);
 
   Serial.println();
   Serial.print("Connecting to ");
@@ -106,25 +119,59 @@ void loop() {
   // Maintain Firebase tasks
   app.loop();
 
-  // Read PIR sensor and push to Firebase when motion is detected
+  // Read PIR sensor and push to Firebase when motion is detected (with
+  // debounce)
   pirValue = digitalRead(PIR_SENSOR_PIN);
   if (pirValue == HIGH) {
     if (pirState == LOW) {
       // Motion detected (transition from LOW to HIGH)
-      Serial.println("PIR: Motion detected!");
       pirState = HIGH;
 
-      // Push motion event to Firebase with timestamp using local unique ID
-      if (app.ready()) {
-        String motionKey = generatePushId();
-        String motionJson = "{\"/sensors/motion/" + motionKey +
-                            "\":{\"timestamp\":{\".sv\":\"timestamp\"}}}";
-        Database.update<object_t>(aClient, "", object_t(motionJson));
+      // Check debounce: only push if enough time has passed since last event
+      if (millis() - lastMotionEventTime >= EVENT_DEBOUNCE_MS) {
+        Serial.println("PIR: Motion detected!");
+        lastMotionEventTime = millis();
+
+        // Push motion event to Firebase with timestamp using local unique ID
+        if (app.ready()) {
+          String motionKey = generatePushId();
+          String motionJson = "{\"/sensors/motion/" + motionKey +
+                              "\":{\"timestamp\":{\".sv\":\"timestamp\"}}}";
+          Database.update<object_t>(aClient, "", object_t(motionJson));
+        }
       }
     }
   } else {
     if (pirState == HIGH) {
       pirState = LOW;
+    }
+  }
+
+  // Read vibration sensor and push to Firebase when vibration is detected (with
+  // debounce)
+  vibrationValue = digitalRead(VIBRATION_SENSOR_PIN);
+  if (vibrationValue == HIGH) {
+    if (vibrationState == LOW) {
+      // Vibration detected (transition from LOW to HIGH)
+      vibrationState = HIGH;
+
+      // Check debounce: only push if enough time has passed since last event
+      if (millis() - lastVibrationEventTime >= EVENT_DEBOUNCE_MS) {
+        Serial.println("Vibration: Vibration detected!");
+        lastVibrationEventTime = millis();
+
+        // Push vibration event to Firebase with timestamp using local unique ID
+        if (app.ready()) {
+          String vibrationKey = generatePushId();
+          String vibrationJson = "{\"/sensors/vibration/" + vibrationKey +
+                                 "\":{\"timestamp\":{\".sv\":\"timestamp\"}}}";
+          Database.update<object_t>(aClient, "", object_t(vibrationJson));
+        }
+      }
+    }
+  } else {
+    if (vibrationState == HIGH) {
+      vibrationState = LOW;
     }
   }
 

@@ -11,6 +11,7 @@ import {
   Flame,
   Droplets,
   Volume2,
+  Mountain,
 } from "lucide-react";
 
 interface NavLink {
@@ -34,6 +35,11 @@ const navLinks: NavLink[] = [
     href: "/motion",
     label: "Motion",
     icon: <PersonStanding className="w-5 h-5" />,
+  },
+  {
+    href: "/vibration",
+    label: "Vibration",
+    icon: <Mountain className="w-5 h-5" />,
   },
   {
     href: "/gas",
@@ -79,6 +85,17 @@ const getRouteColors = (pathname: string) => {
       activeText: "text-blue-700",
       hoverBg: "hover:bg-blue-50",
       hoverText: "hover:text-blue-600",
+    };
+  }
+  if (pathname === "/vibration") {
+    return {
+      border: "border-zinc-200",
+      logoIcon: "text-zinc-700",
+      logoGradient: "from-zinc-800 via-gray-700 to-slate-600",
+      activeBg: "bg-zinc-100",
+      activeText: "text-zinc-800",
+      hoverBg: "hover:bg-zinc-50",
+      hoverText: "hover:text-zinc-700",
     };
   }
   if (pathname === "/gas") {
