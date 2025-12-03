@@ -41,6 +41,9 @@ bool usingPrimaryWiFi = false;
 // Debounce interval for event-based sensors (3 seconds)
 #define EVENT_DEBOUNCE_MS 3000
 
+// Sound sensor sampling window duration (100ms)
+#define SOUND_SAMPLING_DURATION_MS 100
+
 // PIR sensor state tracking
 int pirState = LOW;
 int pirValue = 0;
@@ -120,6 +123,34 @@ void connectWiFiWithFallback() {
   }
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
+}
+
+// Function to read sound sensor amplitude over a 100ms sampling window
+// Calculates peak-to-peak amplitude (max - min) for accurate sound level
+// measurement
+int readSoundAmplitude() {
+  unsigned long startTime = millis();
+  int minValue = 4095;
+  int maxValue = 0;
+
+  // Sample for 100ms
+  while (millis() - startTime < SOUND_SAMPLING_DURATION_MS) {
+    int currentValue = analogRead(SOUND_SENSOR_PIN);
+    if (currentValue < minValue) {
+      minValue = currentValue;
+    }
+    if (currentValue > maxValue) {
+      maxValue = currentValue;
+    }
+  }
+
+  // Calculate peak-to-peak amplitude
+  int amplitude = maxValue - minValue;
+
+  Serial.printf("Sound: min=%d, max=%d, amplitude=%d\n", minValue, maxValue,
+                amplitude);
+
+  return amplitude;
 }
 
 // Setup function: Initialize serial, WiFi, and Firebase
@@ -220,11 +251,10 @@ void loop() {
     int gasValue = analogRead(GAS_SENSOR_PIN);
     int flameValue = analogRead(FLAME_SENSOR_PIN);
     int soilMoistureValue = analogRead(SOIL_MOISTURE_SENSOR_PIN);
-    int soundValue = analogRead(SOUND_SENSOR_PIN);
+    int soundAmplitude = readSoundAmplitude();
 
-    Serial.printf("Light: %d, Gas: %d, Flame: %d, Soil: %d, Sound: %d\n",
-                  lightValue, gasValue, flameValue, soilMoistureValue,
-                  soundValue);
+    Serial.printf("Light: %d, Gas: %d, Flame: %d, Soil: %d\n", lightValue,
+                  gasValue, flameValue, soilMoistureValue);
 
     // Generate unique IDs locally for each sensor record
     String lightKey = generatePushId();
@@ -249,7 +279,7 @@ void loop() {
                  "\":{\"value\":" + String(soilMoistureValue) +
                  ",\"timestamp\":{\".sv\":\"timestamp\"}},";
     batchJson += "\"/sensors/sound/" + soundKey +
-                 "\":{\"value\":" + String(soundValue) +
+                 "\":{\"amplitude\":" + String(soundAmplitude) +
                  ",\"timestamp\":{\".sv\":\"timestamp\"}}";
     batchJson += "}";
 
