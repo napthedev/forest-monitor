@@ -8,9 +8,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Forest Monitor - Real-time Light Sensor Dashboard",
+  title: "Forest Monitor - Real-time Sensor Dashboard",
   description:
-    "Monitor forest light levels in real-time with ESP32 sensors and Firebase",
+    "Monitor forest metrics in real-time with ESP32 sensors and Firebase",
 };
 
 export default function RootLayout({

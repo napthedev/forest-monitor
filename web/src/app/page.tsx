@@ -58,6 +58,10 @@ export default function Home() {
   const [lightData, setLightData] = useState<LightSensorData[]>([]);
   const [currentLight, setCurrentLight] = useState<number | null>(null);
   const [lightLoading, setLightLoading] = useState(true);
+  const [lastLightTimestamp, setLastLightTimestamp] = useState<number | null>(
+    null
+  );
+  const [lightStatusText, setLightStatusText] = useState<string>("Live");
 
   // Motion sensor state
   const [lastMotionTimestamp, setLastMotionTimestamp] = useState<number | null>(
@@ -70,11 +74,17 @@ export default function Home() {
   const [gasData, setGasData] = useState<GasSensorData[]>([]);
   const [currentGas, setCurrentGas] = useState<number | null>(null);
   const [gasLoading, setGasLoading] = useState(true);
+  const [lastGasTimestamp, setLastGasTimestamp] = useState<number | null>(null);
+  const [gasStatusText, setGasStatusText] = useState<string>("Live");
 
   // Flame sensor state
   const [flameData, setFlameData] = useState<FlameSensorData[]>([]);
   const [currentFlame, setCurrentFlame] = useState<number | null>(null);
   const [flameLoading, setFlameLoading] = useState(true);
+  const [lastFlameTimestamp, setLastFlameTimestamp] = useState<number | null>(
+    null
+  );
+  const [flameStatusText, setFlameStatusText] = useState<string>("Live");
 
   // Soil moisture sensor state
   const [soilMoistureData, setSoilMoistureData] = useState<
@@ -82,23 +92,93 @@ export default function Home() {
   >([]);
   const [currentMoisture, setCurrentMoisture] = useState<number | null>(null);
   const [soilMoistureLoading, setSoilMoistureLoading] = useState(true);
+  const [lastMoistureTimestamp, setLastMoistureTimestamp] = useState<
+    number | null
+  >(null);
+  const [moistureStatusText, setMoistureStatusText] = useState<string>("Live");
 
   // Check if fire alert (percentage > 70)
   const isFireAlert = currentFlame !== null && currentFlame > 70;
 
-  // Update motion relative time every second
-  useEffect(() => {
-    if (lastMotionTimestamp === null) return;
+  // Helper function to get status text for analog sensors
+  const getAnalogSensorStatus = (timestamp: number | null): string => {
+    if (!timestamp) return "Live";
+    const timeDiff = Date.now() - timestamp;
+    if (timeDiff < 10000) {
+      return "Live";
+    }
 
-    const updateRelativeTime = () => {
-      setMotionRelativeTime(formatRelativeTime(lastMotionTimestamp));
+    const seconds = Math.floor(timeDiff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (days > 0) {
+      return `${days} day${days > 1 ? "s" : ""} ago`;
+    } else if (hours > 0) {
+      return `${hours} hour${hours > 1 ? "s" : ""} ago`;
+    } else if (minutes > 0) {
+      return `${minutes} minute${minutes > 1 ? "s" : ""} ago`;
+    } else {
+      return `${seconds} second${seconds > 1 ? "s" : ""} ago`;
+    }
+  };
+
+  // Update light status text every second
+  useEffect(() => {
+    if (lastLightTimestamp === null) return;
+
+    const updateStatus = () => {
+      setLightStatusText(getAnalogSensorStatus(lastLightTimestamp));
     };
 
-    updateRelativeTime();
-    const interval = setInterval(updateRelativeTime, 1000);
+    updateStatus();
+    const interval = setInterval(updateStatus, 1000);
 
     return () => clearInterval(interval);
-  }, [lastMotionTimestamp]);
+  }, [lastLightTimestamp]);
+
+  // Update gas status text every second
+  useEffect(() => {
+    if (lastGasTimestamp === null) return;
+
+    const updateStatus = () => {
+      setGasStatusText(getAnalogSensorStatus(lastGasTimestamp));
+    };
+
+    updateStatus();
+    const interval = setInterval(updateStatus, 1000);
+
+    return () => clearInterval(interval);
+  }, [lastGasTimestamp]);
+
+  // Update flame status text every second
+  useEffect(() => {
+    if (lastFlameTimestamp === null) return;
+
+    const updateStatus = () => {
+      setFlameStatusText(getAnalogSensorStatus(lastFlameTimestamp));
+    };
+
+    updateStatus();
+    const interval = setInterval(updateStatus, 1000);
+
+    return () => clearInterval(interval);
+  }, [lastFlameTimestamp]);
+
+  // Update moisture status text every second
+  useEffect(() => {
+    if (lastMoistureTimestamp === null) return;
+
+    const updateStatus = () => {
+      setMoistureStatusText(getAnalogSensorStatus(lastMoistureTimestamp));
+    };
+
+    updateStatus();
+    const interval = setInterval(updateStatus, 1000);
+
+    return () => clearInterval(interval);
+  }, [lastMoistureTimestamp]);
 
   // Fetch light sensor data (last 10 readings for preview)
   useEffect(() => {
@@ -131,9 +211,9 @@ export default function Home() {
 
         setLightData(formattedData);
         if (formattedData.length > 0) {
-          setCurrentLight(
-            formattedData[formattedData.length - 1].lightPercentage
-          );
+          const lastRecord = formattedData[formattedData.length - 1];
+          setCurrentLight(lastRecord.lightPercentage);
+          setLastLightTimestamp(parseInt(lastRecord.timestamp));
         }
       }
       setLightLoading(false);
@@ -198,7 +278,9 @@ export default function Home() {
 
         setGasData(formattedData);
         if (formattedData.length > 0) {
-          setCurrentGas(formattedData[formattedData.length - 1].gasPercentage);
+          const lastRecord = formattedData[formattedData.length - 1];
+          setCurrentGas(lastRecord.gasPercentage);
+          setLastGasTimestamp(parseInt(lastRecord.timestamp));
         }
       }
       setGasLoading(false);
@@ -238,9 +320,9 @@ export default function Home() {
 
         setFlameData(formattedData);
         if (formattedData.length > 0) {
-          setCurrentFlame(
-            formattedData[formattedData.length - 1].flamePercentage
-          );
+          const lastRecord = formattedData[formattedData.length - 1];
+          setCurrentFlame(lastRecord.flamePercentage);
+          setLastFlameTimestamp(parseInt(lastRecord.timestamp));
         }
       }
       setFlameLoading(false);
@@ -280,9 +362,9 @@ export default function Home() {
 
         setSoilMoistureData(formattedData);
         if (formattedData.length > 0) {
-          setCurrentMoisture(
-            formattedData[formattedData.length - 1].moisturePercentage
-          );
+          const lastRecord = formattedData[formattedData.length - 1];
+          setCurrentMoisture(lastRecord.moisturePercentage);
+          setLastMoistureTimestamp(parseInt(lastRecord.timestamp));
         }
       }
       setSoilMoistureLoading(false);
@@ -404,12 +486,12 @@ export default function Home() {
                     <div className="flex items-center gap-1 text-xs text-orange-600">
                       <span
                         className={`w-2 h-2 rounded-full ${
-                          currentLight !== null && currentLight > 50
+                          lightStatusText === "Live"
                             ? "bg-amber-500"
                             : "bg-orange-600"
                         } animate-pulse`}
                       />
-                      Live
+                      {lightStatusText}
                     </div>
                   </div>
                 </>
@@ -581,12 +663,12 @@ export default function Home() {
                     <div className="flex items-center gap-1 text-xs text-gray-600">
                       <span
                         className={`w-2 h-2 rounded-full ${
-                          currentGas !== null && currentGas > 60
+                          gasStatusText === "Live"
                             ? "bg-amber-500"
                             : "bg-gray-500"
                         } animate-pulse`}
                       />
-                      Live
+                      {gasStatusText}
                     </div>
                   </div>
                 </>
@@ -684,12 +766,12 @@ export default function Home() {
                     <div className="flex items-center gap-1 text-xs text-red-600">
                       <span
                         className={`w-2 h-2 rounded-full ${
-                          currentFlame !== null && currentFlame > 40
+                          flameStatusText === "Live"
                             ? "bg-red-600"
                             : "bg-green-500"
                         } animate-pulse`}
                       />
-                      {isFireAlert ? "Alert!" : "Live"}
+                      {isFireAlert ? "Alert!" : flameStatusText}
                     </div>
                   </div>
                 </>
@@ -777,14 +859,16 @@ export default function Home() {
                     <div className="flex items-center gap-1 text-xs text-amber-700">
                       <span
                         className={`w-2 h-2 rounded-full ${
-                          currentMoisture !== null && currentMoisture < 20
-                            ? "bg-red-500"
-                            : currentMoisture !== null && currentMoisture > 90
-                            ? "bg-blue-500"
-                            : "bg-amber-600"
+                          moistureStatusText === "Live"
+                            ? currentMoisture !== null && currentMoisture < 20
+                              ? "bg-red-500"
+                              : currentMoisture !== null && currentMoisture > 90
+                              ? "bg-blue-500"
+                              : "bg-amber-600"
+                            : "bg-gray-400"
                         } animate-pulse`}
                       />
-                      Live
+                      {moistureStatusText}
                     </div>
                   </div>
                 </>
