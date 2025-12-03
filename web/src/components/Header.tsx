@@ -47,6 +47,15 @@ const navLinks: NavLink[] = [
       </svg>
     ),
   },
+  {
+    href: "/gas",
+    label: "Gas Sensor",
+    icon: (
+      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M19.35,10.04C18.67,6.59 15.64,4 12,4C9.11,4 6.6,5.64 5.35,8.04C2.34,8.36 0,10.91 0,14A6,6 0 0,0 6,20H19A5,5 0 0,0 24,15C24,12.36 21.95,10.22 19.35,10.04Z" />
+      </svg>
+    ),
+  },
 ];
 
 // Route-based color configuration
@@ -71,6 +80,17 @@ const getRouteColors = (pathname: string) => {
       activeText: "text-blue-700",
       hoverBg: "hover:bg-blue-50",
       hoverText: "hover:text-blue-600",
+    };
+  }
+  if (pathname === "/gas") {
+    return {
+      border: "border-gray-200",
+      logoIcon: "text-gray-600",
+      logoGradient: "from-gray-700 via-slate-600 to-zinc-600",
+      activeBg: "bg-gray-100",
+      activeText: "text-gray-700",
+      hoverBg: "hover:bg-gray-50",
+      hoverText: "hover:text-gray-600",
     };
   }
   // Default: green theme for dashboard

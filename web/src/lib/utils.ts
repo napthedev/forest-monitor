@@ -67,3 +67,26 @@ export function getGradientColor(percentage: number | null): string {
   if (percentage < 60) return "from-orange-700 to-amber-600";
   return "from-amber-600 to-orange-500";
 }
+
+// Convert raw gas sensor value (0-4095) to percentage (0-100%)
+// Higher raw value = higher gas concentration = higher percentage
+export function convertToGasPercentage(rawValue: number): number {
+  return Math.round((rawValue / 4095) * 100 * 10) / 10;
+}
+
+// Determine gas level description
+export function getGasDescription(percentage: number | null): string {
+  if (percentage === null) return "Unknown";
+  if (percentage < 25) return "Safe";
+  if (percentage < 60) return "Moderate";
+  if (percentage < 75) return "Elevated";
+  return "Warning";
+}
+
+// Get gradient color based on gas level
+export function getGasGradientColor(percentage: number | null): string {
+  if (percentage === null) return "from-gray-400 to-gray-500";
+  if (percentage < 25) return "from-gray-600 to-slate-500";
+  if (percentage < 60) return "from-amber-600 to-yellow-500";
+  return "from-red-600 to-orange-500";
+}

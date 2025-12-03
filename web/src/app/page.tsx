@@ -16,11 +16,18 @@ import {
   formatRelativeTime,
   convertToPercentage,
   getLightDescription,
+  convertToGasPercentage,
+  getGasDescription,
 } from "@/lib/utils";
 
 interface LightSensorData {
   timestamp: string;
   lightPercentage: number;
+}
+
+interface GasSensorData {
+  timestamp: string;
+  gasPercentage: number;
 }
 
 export default function Home() {
@@ -35,6 +42,11 @@ export default function Home() {
   );
   const [motionRelativeTime, setMotionRelativeTime] = useState<string>("");
   const [motionLoading, setMotionLoading] = useState(true);
+
+  // Gas sensor state
+  const [gasData, setGasData] = useState<GasSensorData[]>([]);
+  const [currentGas, setCurrentGas] = useState<number | null>(null);
+  const [gasLoading, setGasLoading] = useState(true);
 
   // Update motion relative time every second
   useEffect(() => {
@@ -112,6 +124,46 @@ export default function Home() {
         }
       }
       setMotionLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Fetch gas sensor data (last 10 readings for preview)
+  useEffect(() => {
+    const sensorsRef = ref(database, "/sensors/gas");
+    const sensorsQuery = query(
+      sensorsRef,
+      orderByChild("timestamp"),
+      limitToLast(10)
+    );
+
+    const unsubscribe = onValue(sensorsQuery, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const formattedData: GasSensorData[] = Object.entries(data).map(
+          ([, record]) => {
+            const { timestamp, value } = record as {
+              timestamp: number;
+              value: number;
+            };
+            return {
+              timestamp: String(timestamp),
+              gasPercentage: convertToGasPercentage(value),
+            };
+          }
+        );
+
+        formattedData.sort(
+          (a, b) => parseInt(a.timestamp) - parseInt(b.timestamp)
+        );
+
+        setGasData(formattedData);
+        if (formattedData.length > 0) {
+          setCurrentGas(formattedData[formattedData.length - 1].gasPercentage);
+        }
+      }
+      setGasLoading(false);
     });
 
     return () => unsubscribe();
@@ -368,6 +420,115 @@ export default function Home() {
                       Date.now() - lastMotionTimestamp < 60000
                         ? "Active"
                         : "Monitoring"}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </Link>
+
+          {/* Gas Sensor Card */}
+          <Link href="/gas" className="group">
+            <div className="bg-gradient-to-br from-gray-50 to-slate-50 rounded-3xl p-6 border border-gray-200 shadow-lg shadow-gray-100/50 hover:shadow-xl hover:shadow-gray-100/70 transition-all duration-300 hover:scale-[1.02] h-full">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-gray-500 to-slate-500 rounded-2xl flex items-center justify-center shadow-lg shadow-gray-200">
+                  <svg
+                    className="w-6 h-6 text-white"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M19.35,10.04C18.67,6.59 15.64,4 12,4C9.11,4 6.6,5.64 5.35,8.04C2.34,8.36 0,10.91 0,14A6,6 0 0,0 6,20H19A5,5 0 0,0 24,15C24,12.36 21.95,10.22 19.35,10.04Z" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-800">
+                    Gas Sensor
+                  </h2>
+                  <p className="text-sm text-gray-500">Smoke & gas detection</p>
+                </div>
+                <svg
+                  className="w-5 h-5 text-gray-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </div>
+
+              {gasLoading ? (
+                <div className="animate-pulse">
+                  <div className="h-24 bg-gray-200 rounded-xl mb-4" />
+                  <div className="h-6 w-24 bg-gray-200 rounded" />
+                </div>
+              ) : (
+                <>
+                  {/* Mini Chart Preview */}
+                  <div className="h-24 mb-4">
+                    {gasData.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={gasData}>
+                          <defs>
+                            <linearGradient
+                              id="colorGasPreview"
+                              x1="0"
+                              y1="0"
+                              x2="0"
+                              y2="1"
+                            >
+                              <stop
+                                offset="5%"
+                                stopColor="#6b7280"
+                                stopOpacity={0.6}
+                              />
+                              <stop
+                                offset="95%"
+                                stopColor="#6b7280"
+                                stopOpacity={0.1}
+                              />
+                            </linearGradient>
+                          </defs>
+                          <Area
+                            type="monotone"
+                            dataKey="gasPercentage"
+                            stroke="#6b7280"
+                            strokeWidth={2}
+                            fill="url(#colorGasPreview)"
+                            dot={false}
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="h-full flex items-center justify-center text-gray-400 text-sm">
+                        No data available
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Current Value */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-3xl font-bold text-gray-800">
+                        {currentGas !== null ? `${currentGas}%` : "—"}
+                      </span>
+                      <span className="text-sm text-gray-500 ml-2">
+                        {getGasDescription(currentGas)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-gray-600">
+                      <span
+                        className={`w-2 h-2 rounded-full ${
+                          currentGas !== null && currentGas > 60
+                            ? "bg-amber-500"
+                            : "bg-gray-500"
+                        } animate-pulse`}
+                      />
+                      Live
                     </div>
                   </div>
                 </>
