@@ -9,6 +9,7 @@ import {
   PersonStanding,
   Cloud,
   Flame,
+  Droplets,
 } from "lucide-react";
 import { database } from "@/lib/firebase";
 import {
@@ -28,6 +29,8 @@ import {
   getGasDescription,
   convertToFlamePercentage,
   getFlameDescription,
+  convertToMoisturePercentage,
+  getMoistureDescription,
 } from "@/lib/utils";
 
 interface LightSensorData {
@@ -43,6 +46,11 @@ interface GasSensorData {
 interface FlameSensorData {
   timestamp: string;
   flamePercentage: number;
+}
+
+interface SoilMoistureSensorData {
+  timestamp: string;
+  moisturePercentage: number;
 }
 
 export default function Home() {
@@ -67,6 +75,13 @@ export default function Home() {
   const [flameData, setFlameData] = useState<FlameSensorData[]>([]);
   const [currentFlame, setCurrentFlame] = useState<number | null>(null);
   const [flameLoading, setFlameLoading] = useState(true);
+
+  // Soil moisture sensor state
+  const [soilMoistureData, setSoilMoistureData] = useState<
+    SoilMoistureSensorData[]
+  >([]);
+  const [currentMoisture, setCurrentMoisture] = useState<number | null>(null);
+  const [soilMoistureLoading, setSoilMoistureLoading] = useState(true);
 
   // Check if fire alert (percentage > 70)
   const isFireAlert = currentFlame !== null && currentFlame > 70;
@@ -229,6 +244,48 @@ export default function Home() {
         }
       }
       setFlameLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Fetch soil moisture sensor data (last 10 readings for preview)
+  useEffect(() => {
+    const sensorsRef = ref(database, "/sensors/soil-moisture");
+    const sensorsQuery = query(
+      sensorsRef,
+      orderByChild("timestamp"),
+      limitToLast(10)
+    );
+
+    const unsubscribe = onValue(sensorsQuery, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const formattedData: SoilMoistureSensorData[] = Object.entries(
+          data
+        ).map(([, record]) => {
+          const { timestamp, value } = record as {
+            timestamp: number;
+            value: number;
+          };
+          return {
+            timestamp: String(timestamp),
+            moisturePercentage: convertToMoisturePercentage(value),
+          };
+        });
+
+        formattedData.sort(
+          (a, b) => parseInt(a.timestamp) - parseInt(b.timestamp)
+        );
+
+        setSoilMoistureData(formattedData);
+        if (formattedData.length > 0) {
+          setCurrentMoisture(
+            formattedData[formattedData.length - 1].moisturePercentage
+          );
+        }
+      }
+      setSoilMoistureLoading(false);
     });
 
     return () => unsubscribe();
@@ -540,7 +597,7 @@ export default function Home() {
           {/* Flame Sensor Card */}
           <Link href="/flame" className="group">
             <div
-              className={`bg-gradient-to-br from-red-50 to-rose-50 rounded-3xl p-6 border shadow-lg transition-all duration-300 hover:scale-[1.02] h-full ${
+              className={`bg-gradient-to-br from-red-50 to-rose-50 rounded-3xl p-6 border shadow-lg transition-all duration-300 hover:scale-[1.02] h-full relative ${
                 isFireAlert
                   ? "border-red-500 shadow-red-200/70 animate-pulse"
                   : "border-red-200 shadow-red-100/50 hover:shadow-xl hover:shadow-red-100/70"
@@ -633,6 +690,101 @@ export default function Home() {
                         } animate-pulse`}
                       />
                       {isFireAlert ? "Alert!" : "Live"}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </Link>
+
+          {/* Soil Moisture Sensor Card */}
+          <Link href="/soil-moisture" className="group">
+            <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-3xl p-6 border border-amber-200 shadow-lg shadow-amber-100/50 hover:shadow-xl hover:shadow-amber-100/70 transition-all duration-300 hover:scale-[1.02] h-full">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-amber-700 to-yellow-600 rounded-2xl flex items-center justify-center shadow-lg shadow-amber-200">
+                  <Droplets className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-800">
+                    Soil Moisture
+                  </h2>
+                  <p className="text-sm text-gray-500">
+                    Ground water monitoring
+                  </p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-amber-600 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+
+              {soilMoistureLoading ? (
+                <div className="animate-pulse">
+                  <div className="h-24 bg-amber-200 rounded-xl mb-4" />
+                  <div className="h-6 w-24 bg-amber-200 rounded" />
+                </div>
+              ) : (
+                <>
+                  {/* Mini Chart Preview */}
+                  <div className="h-24 mb-4">
+                    {soilMoistureData.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={soilMoistureData}>
+                          <defs>
+                            <linearGradient
+                              id="colorMoisturePreview"
+                              x1="0"
+                              y1="0"
+                              x2="0"
+                              y2="1"
+                            >
+                              <stop
+                                offset="5%"
+                                stopColor="#92400e"
+                                stopOpacity={0.6}
+                              />
+                              <stop
+                                offset="95%"
+                                stopColor="#92400e"
+                                stopOpacity={0.1}
+                              />
+                            </linearGradient>
+                          </defs>
+                          <Area
+                            type="monotone"
+                            dataKey="moisturePercentage"
+                            stroke="#92400e"
+                            strokeWidth={2}
+                            fill="url(#colorMoisturePreview)"
+                            dot={false}
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="h-full flex items-center justify-center text-gray-400 text-sm">
+                        No data available
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Current Value */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-3xl font-bold text-gray-800">
+                        {currentMoisture !== null ? `${currentMoisture}%` : "—"}
+                      </span>
+                      <span className="text-sm text-gray-500 ml-2">
+                        {getMoistureDescription(currentMoisture)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-amber-700">
+                      <span
+                        className={`w-2 h-2 rounded-full ${
+                          currentMoisture !== null && currentMoisture < 20
+                            ? "bg-red-500"
+                            : currentMoisture !== null && currentMoisture > 90
+                            ? "bg-blue-500"
+                            : "bg-amber-600"
+                        } animate-pulse`}
+                      />
+                      Live
                     </div>
                   </div>
                 </>

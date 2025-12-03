@@ -114,3 +114,29 @@ export function getFlameGradientColor(percentage: number | null): string {
   if (percentage < 70) return "from-orange-600 to-red-500";
   return "from-red-700 to-rose-600";
 }
+
+// Convert raw soil moisture sensor value (0-4095) to percentage (0-100%)
+// Higher raw value = higher moisture = higher percentage
+export function convertToMoisturePercentage(rawValue: number): number {
+  return Math.round((rawValue / 4095) * 100 * 10) / 10;
+}
+
+// Determine soil moisture level description
+export function getMoistureDescription(percentage: number | null): string {
+  if (percentage === null) return "Unknown";
+  if (percentage < 20) return "Dry";
+  if (percentage < 40) return "Low";
+  if (percentage < 70) return "Optimal";
+  if (percentage < 90) return "High";
+  return "Saturated";
+}
+
+// Get gradient color based on soil moisture level
+export function getMoistureGradientColor(percentage: number | null): string {
+  if (percentage === null) return "from-gray-400 to-gray-500";
+  if (percentage < 20) return "from-amber-800 to-yellow-700";
+  if (percentage < 40) return "from-amber-700 to-yellow-600";
+  if (percentage < 70) return "from-amber-600 to-yellow-500";
+  if (percentage < 90) return "from-yellow-600 to-amber-500";
+  return "from-blue-600 to-cyan-500";
+}

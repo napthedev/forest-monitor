@@ -25,6 +25,7 @@ const char *password = WIFI_PASSWORD;
 #define PIR_SENSOR_PIN 23
 #define GAS_SENSOR_PIN 39
 #define FLAME_SENSOR_PIN 34
+#define SOIL_MOISTURE_SENSOR_PIN 35
 #define SYNC_INTERVAL 10000 // 10 seconds
 
 // PIR sensor state tracking
@@ -175,6 +176,21 @@ void loop() {
 
     // Push flame data to Firebase
     Database.push<object_t>(aClient, "/sensors/flame", flame_json);
+
+    // Read soil moisture sensor value
+    int soilMoistureValue = analogRead(SOIL_MOISTURE_SENSOR_PIN);
+    Serial.printf("Soil moisture value: %d\n", soilMoistureValue);
+
+    // Create JSON with value and server timestamp for soil moisture sensor
+    object_t soil_json, soil_val_json, soil_ts_json;
+    JsonWriter soil_writer;
+    soil_writer.create(soil_val_json, "value", soilMoistureValue);
+    soil_writer.create(soil_ts_json, "timestamp",
+                       object_t("{\".sv\":\"timestamp\"}"));
+    soil_writer.join(soil_json, 2, soil_val_json, soil_ts_json);
+
+    // Push soil moisture data to Firebase
+    Database.push<object_t>(aClient, "/sensors/soil-moisture", soil_json);
   }
 
   // Check WiFi connection status periodically (every 5 seconds)
