@@ -2,6 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import {
+  TreePine,
+  Sun,
+  ChevronRight,
+  PersonStanding,
+  Cloud,
+  Flame,
+} from "lucide-react";
 import { database } from "@/lib/firebase";
 import {
   ref,
@@ -18,6 +26,8 @@ import {
   getLightDescription,
   convertToGasPercentage,
   getGasDescription,
+  convertToFlamePercentage,
+  getFlameDescription,
 } from "@/lib/utils";
 
 interface LightSensorData {
@@ -28,6 +38,11 @@ interface LightSensorData {
 interface GasSensorData {
   timestamp: string;
   gasPercentage: number;
+}
+
+interface FlameSensorData {
+  timestamp: string;
+  flamePercentage: number;
 }
 
 export default function Home() {
@@ -47,6 +62,14 @@ export default function Home() {
   const [gasData, setGasData] = useState<GasSensorData[]>([]);
   const [currentGas, setCurrentGas] = useState<number | null>(null);
   const [gasLoading, setGasLoading] = useState(true);
+
+  // Flame sensor state
+  const [flameData, setFlameData] = useState<FlameSensorData[]>([]);
+  const [currentFlame, setCurrentFlame] = useState<number | null>(null);
+  const [flameLoading, setFlameLoading] = useState(true);
+
+  // Check if fire alert (percentage > 70)
+  const isFireAlert = currentFlame !== null && currentFlame > 70;
 
   // Update motion relative time every second
   useEffect(() => {
@@ -169,6 +192,48 @@ export default function Home() {
     return () => unsubscribe();
   }, []);
 
+  // Fetch flame sensor data (last 10 readings for preview)
+  useEffect(() => {
+    const sensorsRef = ref(database, "/sensors/flame");
+    const sensorsQuery = query(
+      sensorsRef,
+      orderByChild("timestamp"),
+      limitToLast(10)
+    );
+
+    const unsubscribe = onValue(sensorsQuery, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const formattedData: FlameSensorData[] = Object.entries(data).map(
+          ([, record]) => {
+            const { timestamp, value } = record as {
+              timestamp: number;
+              value: number;
+            };
+            return {
+              timestamp: String(timestamp),
+              flamePercentage: convertToFlamePercentage(value),
+            };
+          }
+        );
+
+        formattedData.sort(
+          (a, b) => parseInt(a.timestamp) - parseInt(b.timestamp)
+        );
+
+        setFlameData(formattedData);
+        if (formattedData.length > 0) {
+          setCurrentFlame(
+            formattedData[formattedData.length - 1].flamePercentage
+          );
+        }
+      }
+      setFlameLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   return (
     <div className="min-h-screen bg-white relative overflow-hidden">
       {/* Forest Background Pattern */}
@@ -190,13 +255,7 @@ export default function Home() {
         {/* Page Header */}
         <header className="text-center mb-12">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <svg
-              className="w-12 h-12 text-emerald-600"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M12 2C13.1 2 14 2.9 14 4C14 4.74 13.6 5.39 13 5.73V7H14C17.31 7 20 9.69 20 13C20 15.21 18.79 17.14 17 18.19V22H7V18.19C5.21 17.14 4 15.21 4 13C4 9.69 6.69 7 10 7H11V5.73C10.4 5.39 10 4.74 10 4C10 2.9 10.9 2 12 2M10 9C7.79 9 6 10.79 6 13C6 14.59 6.85 15.97 8.15 16.67L9 17.14V20H15V17.14L15.85 16.67C17.15 15.97 18 14.59 18 13C18 10.79 16.21 9 14 9H10Z" />
-            </svg>
+            <TreePine className="w-12 h-12 text-emerald-600" />
             <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-700 via-green-600 to-teal-600">
               Forest Monitor
             </h1>
@@ -213,13 +272,7 @@ export default function Home() {
             <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-3xl p-6 border border-orange-200 shadow-lg shadow-orange-100/50 hover:shadow-xl hover:shadow-orange-100/70 transition-all duration-300 hover:scale-[1.02] h-full">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-200">
-                  <svg
-                    className="w-6 h-6 text-white"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M12 7C9.24 7 7 9.24 7 12S9.24 17 12 17 17 14.76 17 12 14.76 7 12 7M12 2L14.39 5.42C13.65 5.15 12.84 5 12 5S10.35 5.15 9.61 5.42L12 2M3.34 7L7.5 6.65C6.9 7.16 6.36 7.78 5.94 8.5C5.5 9.24 5.25 10 5.11 10.79L3.34 7M3.36 17L5.12 13.23C5.26 14 5.53 14.78 5.95 15.5C6.37 16.24 6.91 16.86 7.5 17.37L3.36 17M20.65 7L18.88 10.79C18.74 10 18.47 9.23 18.05 8.5C17.63 7.78 17.1 7.15 16.5 6.64L20.65 7M20.64 17L16.5 17.36C17.09 16.85 17.62 16.22 18.04 15.5C18.46 14.77 18.73 14 18.87 13.21L20.64 17M12 22L9.59 18.56C10.33 18.83 11.14 19 12 19S13.66 18.83 14.4 18.56L12 22Z" />
-                  </svg>
+                  <Sun className="w-6 h-6 text-white" />
                 </div>
                 <div>
                   <h2 className="text-xl font-semibold text-gray-800">
@@ -229,19 +282,7 @@ export default function Home() {
                     Ambient light monitoring
                   </p>
                 </div>
-                <svg
-                  className="w-5 h-5 text-orange-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
+                <ChevronRight className="w-5 h-5 text-orange-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
 
               {lightLoading ? (
@@ -324,13 +365,7 @@ export default function Home() {
             <div className="bg-gradient-to-br from-blue-50 to-sky-50 rounded-3xl p-6 border border-blue-200 shadow-lg shadow-blue-100/50 hover:shadow-xl hover:shadow-blue-100/70 transition-all duration-300 hover:scale-[1.02] h-full">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-sky-500 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-200">
-                  <svg
-                    className="w-6 h-6 text-white"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M13.5,5.5C14.59,5.5 15.5,4.58 15.5,3.5C15.5,2.38 14.59,1.5 13.5,1.5C12.39,1.5 11.5,2.38 11.5,3.5C11.5,4.58 12.39,5.5 13.5,5.5M9.89,19.38L10.89,15L13,17V23H15V15.5L12.89,13.5L13.5,10.5C14.79,12 16.79,13 19,13V11C17.09,11 15.5,10 14.69,8.58L13.69,7C13.29,6.38 12.69,6 12,6C11.69,6 11.5,6.08 11.19,6.08L6,8.28V13H8V9.58L9.79,8.88L8.19,17L3.29,16L2.89,18L9.89,19.38Z" />
-                  </svg>
+                  <PersonStanding className="w-6 h-6 text-white" />
                 </div>
                 <div>
                   <h2 className="text-xl font-semibold text-gray-800">
@@ -338,19 +373,7 @@ export default function Home() {
                   </h2>
                   <p className="text-sm text-gray-500">Wildlife detection</p>
                 </div>
-                <svg
-                  className="w-5 h-5 text-blue-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
+                <ChevronRight className="w-5 h-5 text-blue-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
 
               {motionLoading ? (
@@ -373,18 +396,14 @@ export default function Home() {
                         style={{ width: "80px", height: "80px" }}
                       />
                       <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-100 to-sky-100 flex items-center justify-center relative">
-                        <svg
+                        <PersonStanding
                           className={`w-10 h-10 ${
                             lastMotionTimestamp &&
                             Date.now() - lastMotionTimestamp < 60000
                               ? "text-sky-600"
                               : "text-blue-500"
                           }`}
-                          fill="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path d="M13.5,5.5C14.59,5.5 15.5,4.58 15.5,3.5C15.5,2.38 14.59,1.5 13.5,1.5C12.39,1.5 11.5,2.38 11.5,3.5C11.5,4.58 12.39,5.5 13.5,5.5M9.89,19.38L10.89,15L13,17V23H15V15.5L12.89,13.5L13.5,10.5C14.79,12 16.79,13 19,13V11C17.09,11 15.5,10 14.69,8.58L13.69,7C13.29,6.38 12.69,6 12,6C11.69,6 11.5,6.08 11.19,6.08L6,8.28V13H8V9.58L9.79,8.88L8.19,17L3.29,16L2.89,18L9.89,19.38Z" />
-                        </svg>
+                        />
                       </div>
                     </div>
                   </div>
@@ -432,13 +451,7 @@ export default function Home() {
             <div className="bg-gradient-to-br from-gray-50 to-slate-50 rounded-3xl p-6 border border-gray-200 shadow-lg shadow-gray-100/50 hover:shadow-xl hover:shadow-gray-100/70 transition-all duration-300 hover:scale-[1.02] h-full">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-12 h-12 bg-gradient-to-br from-gray-500 to-slate-500 rounded-2xl flex items-center justify-center shadow-lg shadow-gray-200">
-                  <svg
-                    className="w-6 h-6 text-white"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M19.35,10.04C18.67,6.59 15.64,4 12,4C9.11,4 6.6,5.64 5.35,8.04C2.34,8.36 0,10.91 0,14A6,6 0 0,0 6,20H19A5,5 0 0,0 24,15C24,12.36 21.95,10.22 19.35,10.04Z" />
-                  </svg>
+                  <Cloud className="w-6 h-6 text-white" />
                 </div>
                 <div>
                   <h2 className="text-xl font-semibold text-gray-800">
@@ -446,19 +459,7 @@ export default function Home() {
                   </h2>
                   <p className="text-sm text-gray-500">Smoke & gas detection</p>
                 </div>
-                <svg
-                  className="w-5 h-5 text-gray-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
+                <ChevronRight className="w-5 h-5 text-gray-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
 
               {gasLoading ? (
@@ -529,6 +530,109 @@ export default function Home() {
                         } animate-pulse`}
                       />
                       Live
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </Link>
+
+          {/* Flame Sensor Card */}
+          <Link href="/flame" className="group">
+            <div
+              className={`bg-gradient-to-br from-red-50 to-rose-50 rounded-3xl p-6 border shadow-lg transition-all duration-300 hover:scale-[1.02] h-full ${
+                isFireAlert
+                  ? "border-red-500 shadow-red-200/70 animate-pulse"
+                  : "border-red-200 shadow-red-100/50 hover:shadow-xl hover:shadow-red-100/70"
+              }`}
+            >
+              {/* Fire Alert Badge */}
+              {isFireAlert && (
+                <div className="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                  ⚠️ Alert
+                </div>
+              )}
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-rose-500 rounded-2xl flex items-center justify-center shadow-lg shadow-red-200">
+                  <Flame className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-800">
+                    Flame Sensor
+                  </h2>
+                  <p className="text-sm text-gray-500">Fire detection</p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-red-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+
+              {flameLoading ? (
+                <div className="animate-pulse">
+                  <div className="h-24 bg-red-200 rounded-xl mb-4" />
+                  <div className="h-6 w-24 bg-red-200 rounded" />
+                </div>
+              ) : (
+                <>
+                  {/* Mini Chart Preview */}
+                  <div className="h-24 mb-4">
+                    {flameData.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={flameData}>
+                          <defs>
+                            <linearGradient
+                              id="colorFlamePreview"
+                              x1="0"
+                              y1="0"
+                              x2="0"
+                              y2="1"
+                            >
+                              <stop
+                                offset="5%"
+                                stopColor="#dc2626"
+                                stopOpacity={0.6}
+                              />
+                              <stop
+                                offset="95%"
+                                stopColor="#dc2626"
+                                stopOpacity={0.1}
+                              />
+                            </linearGradient>
+                          </defs>
+                          <Area
+                            type="monotone"
+                            dataKey="flamePercentage"
+                            stroke="#dc2626"
+                            strokeWidth={2}
+                            fill="url(#colorFlamePreview)"
+                            dot={false}
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="h-full flex items-center justify-center text-gray-400 text-sm">
+                        No data available
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Current Value */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-3xl font-bold text-gray-800">
+                        {currentFlame !== null ? `${currentFlame}%` : "—"}
+                      </span>
+                      <span className="text-sm text-gray-500 ml-2">
+                        {getFlameDescription(currentFlame)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-red-600">
+                      <span
+                        className={`w-2 h-2 rounded-full ${
+                          currentFlame !== null && currentFlame > 40
+                            ? "bg-red-600"
+                            : "bg-green-500"
+                        } animate-pulse`}
+                      />
+                      {isFireAlert ? "Alert!" : "Live"}
                     </div>
                   </div>
                 </>

@@ -90,3 +90,27 @@ export function getGasGradientColor(percentage: number | null): string {
   if (percentage < 60) return "from-amber-600 to-yellow-500";
   return "from-red-600 to-orange-500";
 }
+
+// Convert raw flame sensor value (0-4095) to percentage (0-100%)
+// Higher raw value = higher flame detection = higher percentage
+export function convertToFlamePercentage(rawValue: number): number {
+  return Math.round((rawValue / 4095) * 100 * 10) / 10;
+}
+
+// Determine flame level description
+export function getFlameDescription(percentage: number | null): string {
+  if (percentage === null) return "Unknown";
+  if (percentage < 15) return "Safe";
+  if (percentage < 40) return "Low Detection";
+  if (percentage < 70) return "Flame Detected";
+  return "Fire Alert!";
+}
+
+// Get gradient color based on flame level
+export function getFlameGradientColor(percentage: number | null): string {
+  if (percentage === null) return "from-gray-400 to-gray-500";
+  if (percentage < 15) return "from-green-600 to-emerald-500";
+  if (percentage < 40) return "from-yellow-600 to-amber-500";
+  if (percentage < 70) return "from-orange-600 to-red-500";
+  return "from-red-700 to-rose-600";
+}

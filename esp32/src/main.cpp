@@ -24,6 +24,7 @@ const char *password = WIFI_PASSWORD;
 #define LIGHT_SENSOR_PIN 36
 #define PIR_SENSOR_PIN 23
 #define GAS_SENSOR_PIN 39
+#define FLAME_SENSOR_PIN 34
 #define SYNC_INTERVAL 10000 // 10 seconds
 
 // PIR sensor state tracking
@@ -159,6 +160,21 @@ void loop() {
 
     // Push gas data to Firebase
     Database.push<object_t>(aClient, "/sensors/gas", gas_json);
+
+    // Read flame sensor value
+    int flameValue = analogRead(FLAME_SENSOR_PIN);
+    Serial.printf("Flame sensor value: %d\n", flameValue);
+
+    // Create JSON with value and server timestamp for flame sensor
+    object_t flame_json, flame_val_json, flame_ts_json;
+    JsonWriter flame_writer;
+    flame_writer.create(flame_val_json, "value", flameValue);
+    flame_writer.create(flame_ts_json, "timestamp",
+                        object_t("{\".sv\":\"timestamp\"}"));
+    flame_writer.join(flame_json, 2, flame_val_json, flame_ts_json);
+
+    // Push flame data to Firebase
+    Database.push<object_t>(aClient, "/sensors/flame", flame_json);
   }
 
   // Check WiFi connection status periodically (every 5 seconds)

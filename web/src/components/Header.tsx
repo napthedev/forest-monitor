@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { TreePine } from "lucide-react";
 
 interface NavLink {
   href: string;
@@ -56,6 +57,15 @@ const navLinks: NavLink[] = [
       </svg>
     ),
   },
+  {
+    href: "/flame",
+    label: "Flame Sensor",
+    icon: (
+      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M17.66 11.2C17.43 10.9 17.15 10.64 16.89 10.38C16.22 9.78 15.46 9.35 14.82 8.72C13.33 7.26 13 4.85 13.95 3C13 3.23 12.17 3.75 11.46 4.32C8.87 6.4 7.85 10.07 9.07 13.22C9.11 13.32 9.15 13.42 9.15 13.55C9.15 13.77 9 13.97 8.8 14.05C8.57 14.15 8.33 14.09 8.14 13.93C8.08 13.88 8.04 13.83 8 13.76C6.87 12.33 6.69 10.28 7.45 8.64C5.78 10 4.87 12.3 5 14.47C5.06 14.97 5.12 15.47 5.29 15.97C5.43 16.57 5.7 17.17 6 17.7C7.08 19.43 8.95 20.67 10.96 20.92C13.1 21.19 15.39 20.8 17.03 19.32C18.86 17.66 19.5 15 18.56 12.72L18.43 12.46C18.22 12 17.66 11.2 17.66 11.2M14.5 17.5C14.22 17.74 13.76 18 13.4 18.1C12.28 18.5 11.16 17.94 10.5 17.28C11.69 17 12.4 16.12 12.61 15.23C12.78 14.43 12.46 13.77 12.33 13C12.21 12.26 12.23 11.63 12.5 10.94C12.69 11.32 12.89 11.7 13.13 12C13.9 13 15.11 13.44 15.37 14.8C15.41 14.94 15.43 15.08 15.43 15.23C15.46 16.05 15.1 16.95 14.5 17.5Z" />
+      </svg>
+    ),
+  },
 ];
 
 // Route-based color configuration
@@ -93,6 +103,17 @@ const getRouteColors = (pathname: string) => {
       hoverText: "hover:text-gray-600",
     };
   }
+  if (pathname === "/flame") {
+    return {
+      border: "border-red-100",
+      logoIcon: "text-red-600",
+      logoGradient: "from-red-700 via-rose-600 to-orange-600",
+      activeBg: "bg-red-100",
+      activeText: "text-red-700",
+      hoverBg: "hover:bg-red-50",
+      hoverText: "hover:text-red-600",
+    };
+  }
   // Default: green theme for dashboard
   return {
     border: "border-emerald-100",
@@ -117,13 +138,9 @@ export default function Header() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
-            <svg
+            <TreePine
               className={`w-8 h-8 ${colors.logoIcon} group-hover:scale-110 transition-transform`}
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M12 2C13.1 2 14 2.9 14 4C14 4.74 13.6 5.39 13 5.73V7H14C17.31 7 20 9.69 20 13C20 15.21 18.79 17.14 17 18.19V22H7V18.19C5.21 17.14 4 15.21 4 13C4 9.69 6.69 7 10 7H11V5.73C10.4 5.39 10 4.74 10 4C10 2.9 10.9 2 12 2M10 9C7.79 9 6 10.79 6 13C6 14.59 6.85 15.97 8.15 16.67L9 17.14V20H15V17.14L15.85 16.67C17.15 15.97 18 14.59 18 13C18 10.79 16.21 9 14 9H10Z" />
-            </svg>
+            />
             <span
               className={`text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r ${colors.logoGradient}`}
             >
