@@ -130,7 +130,7 @@ export default function SoilMoistureSensorPage() {
             >
               <path d="M12,20A6,6 0 0,1 6,14C6,10 12,3.25 12,3.25C12,3.25 18,10 18,14A6,6 0 0,1 12,20Z" />
             </svg>
-            <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-800 via-yellow-700 to-amber-600">
+            <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-linear-to-r from-amber-800 via-yellow-700 to-amber-600">
               Soil Moisture
             </h1>
           </div>
@@ -141,7 +141,7 @@ export default function SoilMoistureSensorPage() {
 
         {/* Current Reading Card */}
         <div className="mb-8">
-          <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-3xl p-8 border border-amber-200 shadow-lg shadow-amber-100/50">
+          <div className="bg-linear-to-br from-amber-50 to-yellow-50 rounded-3xl p-8 border border-amber-200 shadow-lg shadow-amber-100/50">
             <div className="flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="text-center md:text-left">
                 <h2 className="text-amber-800 text-sm uppercase tracking-widest mb-2">
@@ -154,7 +154,7 @@ export default function SoilMoistureSensorPage() {
                 ) : (
                   <>
                     <div
-                      className={`text-6xl md:text-7xl font-bold bg-gradient-to-r ${getMoistureGradientColor(
+                      className={`text-6xl md:text-7xl font-bold bg-linear-to-r ${getMoistureGradientColor(
                         currentMoisture
                       )} bg-clip-text text-transparent`}
                     >
@@ -254,7 +254,7 @@ export default function SoilMoistureSensorPage() {
         </div>
 
         {/* Chart Section */}
-        <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-3xl p-6 md:p-8 border border-amber-200 shadow-lg shadow-amber-100/50">
+        <div className="bg-linear-to-br from-amber-50 to-yellow-50 rounded-3xl p-6 md:p-8 border border-amber-200 shadow-lg shadow-amber-100/50">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl md:text-2xl font-semibold text-gray-800 flex items-center gap-3">
               <svg
@@ -395,7 +395,7 @@ export default function SoilMoistureSensorPage() {
         {/* Stats Cards */}
         {sensorData.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-            <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-2xl p-6 border border-amber-200">
+            <div className="bg-linear-to-br from-amber-50 to-yellow-50 rounded-2xl p-6 border border-amber-200">
               <div className="flex items-center gap-3 mb-2">
                 <svg
                   className="w-5 h-5 text-red-500"
@@ -412,7 +412,7 @@ export default function SoilMoistureSensorPage() {
                 {Math.min(...sensorData.map((d) => d.moisturePercentage))}%
               </div>
             </div>
-            <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-2xl p-6 border border-amber-200">
+            <div className="bg-linear-to-br from-amber-50 to-yellow-50 rounded-2xl p-6 border border-amber-200">
               <div className="flex items-center gap-3 mb-2">
                 <svg
                   className="w-5 h-5 text-amber-600"
@@ -438,7 +438,7 @@ export default function SoilMoistureSensorPage() {
                 %
               </div>
             </div>
-            <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-2xl p-6 border border-amber-200">
+            <div className="bg-linear-to-br from-amber-50 to-yellow-50 rounded-2xl p-6 border border-amber-200">
               <div className="flex items-center gap-3 mb-2">
                 <svg
                   className="w-5 h-5 text-blue-500"

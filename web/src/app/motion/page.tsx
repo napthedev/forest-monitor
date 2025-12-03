@@ -115,7 +115,7 @@ export default function MotionSensorPage() {
             >
               <path d="M13.5,5.5C14.59,5.5 15.5,4.58 15.5,3.5C15.5,2.38 14.59,1.5 13.5,1.5C12.39,1.5 11.5,2.38 11.5,3.5C11.5,4.58 12.39,5.5 13.5,5.5M9.89,19.38L10.89,15L13,17V23H15V15.5L12.89,13.5L13.5,10.5C14.79,12 16.79,13 19,13V11C17.09,11 15.5,10 14.69,8.58L13.69,7C13.29,6.38 12.69,6 12,6C11.69,6 11.5,6.08 11.19,6.08L6,8.28V13H8V9.58L9.79,8.88L8.19,17L3.29,16L2.89,18L9.89,19.38Z" />
             </svg>
-            <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-sky-600 to-cyan-600">
+            <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-linear-to-r from-blue-700 via-sky-600 to-cyan-600">
               Motion Sensor
             </h1>
           </div>
@@ -126,7 +126,7 @@ export default function MotionSensorPage() {
 
         {/* Last Motion Card */}
         <div className="mb-8">
-          <div className="bg-gradient-to-br from-blue-50 to-sky-50 rounded-3xl p-8 border border-blue-200 shadow-lg shadow-blue-100/50">
+          <div className="bg-linear-to-br from-blue-50 to-sky-50 rounded-3xl p-8 border border-blue-200 shadow-lg shadow-blue-100/50">
             <div className="flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="text-center md:text-left">
                 <h2 className="text-blue-700 text-sm uppercase tracking-widest mb-2">
@@ -138,7 +138,7 @@ export default function MotionSensorPage() {
                   </div>
                 ) : lastMotionTimestamp ? (
                   <>
-                    <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-700 to-sky-600 bg-clip-text text-transparent">
+                    <div className="text-4xl md:text-5xl font-bold bg-linear-to-r from-blue-700 to-sky-600 bg-clip-text text-transparent">
                       {relativeTimeText}
                     </div>
                     <div className="text-gray-500 text-lg mt-2">
@@ -163,7 +163,7 @@ export default function MotionSensorPage() {
                         : "bg-blue-100"
                     }`}
                   />
-                  <div className="absolute inset-4 rounded-full bg-gradient-to-br from-blue-100 to-sky-100 flex items-center justify-center">
+                  <div className="absolute inset-4 rounded-full bg-linear-to-br from-blue-100 to-sky-100 flex items-center justify-center">
                     <svg
                       className={`w-12 h-12 ${
                         lastMotionTimestamp &&
@@ -197,7 +197,7 @@ export default function MotionSensorPage() {
         </div>
 
         {/* Motion Events Timeline */}
-        <div className="bg-gradient-to-br from-blue-50 to-sky-50 rounded-3xl p-6 md:p-8 border border-blue-200 shadow-lg shadow-blue-100/50">
+        <div className="bg-linear-to-br from-blue-50 to-sky-50 rounded-3xl p-6 md:p-8 border border-blue-200 shadow-lg shadow-blue-100/50">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl md:text-2xl font-semibold text-gray-800 flex items-center gap-3">
               <svg
@@ -315,7 +315,7 @@ export default function MotionSensorPage() {
         {/* Stats Cards */}
         {motionEvents.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-            <div className="bg-gradient-to-br from-blue-50 to-sky-50 rounded-2xl p-6 border border-blue-200">
+            <div className="bg-linear-to-br from-blue-50 to-sky-50 rounded-2xl p-6 border border-blue-200">
               <div className="flex items-center gap-3 mb-2">
                 <svg
                   className="w-5 h-5 text-blue-600"
@@ -338,7 +338,7 @@ export default function MotionSensorPage() {
                 {motionEvents.length}
               </div>
             </div>
-            <div className="bg-gradient-to-br from-blue-50 to-sky-50 rounded-2xl p-6 border border-blue-200">
+            <div className="bg-linear-to-br from-blue-50 to-sky-50 rounded-2xl p-6 border border-blue-200">
               <div className="flex items-center gap-3 mb-2">
                 <svg
                   className="w-5 h-5 text-sky-600"
@@ -363,7 +363,7 @@ export default function MotionSensorPage() {
                 )}
               </div>
             </div>
-            <div className="bg-gradient-to-br from-blue-50 to-sky-50 rounded-2xl p-6 border border-blue-200">
+            <div className="bg-linear-to-br from-blue-50 to-sky-50 rounded-2xl p-6 border border-blue-200">
               <div className="flex items-center gap-3 mb-2">
                 <svg
                   className="w-5 h-5 text-cyan-500"

@@ -130,7 +130,7 @@ export default function LightSensorPage() {
             >
               <path d="M12 7C9.24 7 7 9.24 7 12S9.24 17 12 17 17 14.76 17 12 14.76 7 12 7M12 2L14.39 5.42C13.65 5.15 12.84 5 12 5S10.35 5.15 9.61 5.42L12 2M3.34 7L7.5 6.65C6.9 7.16 6.36 7.78 5.94 8.5C5.5 9.24 5.25 10 5.11 10.79L3.34 7M3.36 17L5.12 13.23C5.26 14 5.53 14.78 5.95 15.5C6.37 16.24 6.91 16.86 7.5 17.37L3.36 17M20.65 7L18.88 10.79C18.74 10 18.47 9.23 18.05 8.5C17.63 7.78 17.1 7.15 16.5 6.64L20.65 7M20.64 17L16.5 17.36C17.09 16.85 17.62 16.22 18.04 15.5C18.46 14.77 18.73 14 18.87 13.21L20.64 17M12 22L9.59 18.56C10.33 18.83 11.14 19 12 19S13.66 18.83 14.4 18.56L12 22Z" />
             </svg>
-            <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-700 via-amber-600 to-yellow-600">
+            <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-linear-to-r from-orange-700 via-amber-600 to-yellow-600">
               Light Sensor
             </h1>
           </div>
@@ -141,7 +141,7 @@ export default function LightSensorPage() {
 
         {/* Current Reading Card */}
         <div className="mb-8">
-          <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-3xl p-8 border border-orange-200 shadow-lg shadow-orange-100/50">
+          <div className="bg-linear-to-br from-orange-50 to-amber-50 rounded-3xl p-8 border border-orange-200 shadow-lg shadow-orange-100/50">
             <div className="flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="text-center md:text-left">
                 <h2 className="text-orange-700 text-sm uppercase tracking-widest mb-2">
@@ -154,7 +154,7 @@ export default function LightSensorPage() {
                 ) : (
                   <>
                     <div
-                      className={`text-6xl md:text-7xl font-bold bg-gradient-to-r ${getGradientColor(
+                      className={`text-6xl md:text-7xl font-bold bg-linear-to-r ${getGradientColor(
                         currentLight
                       )} bg-clip-text text-transparent`}
                     >
@@ -252,7 +252,7 @@ export default function LightSensorPage() {
         </div>
 
         {/* Chart Section */}
-        <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-3xl p-6 md:p-8 border border-orange-200 shadow-lg shadow-orange-100/50">
+        <div className="bg-linear-to-br from-orange-50 to-amber-50 rounded-3xl p-6 md:p-8 border border-orange-200 shadow-lg shadow-orange-100/50">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl md:text-2xl font-semibold text-gray-800 flex items-center gap-3">
               <svg
@@ -384,7 +384,7 @@ export default function LightSensorPage() {
         {/* Stats Cards */}
         {sensorData.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-            <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-6 border border-orange-200">
+            <div className="bg-linear-to-br from-orange-50 to-amber-50 rounded-2xl p-6 border border-orange-200">
               <div className="flex items-center gap-3 mb-2">
                 <svg
                   className="w-5 h-5 text-red-500"
@@ -401,7 +401,7 @@ export default function LightSensorPage() {
                 {Math.min(...sensorData.map((d) => d.lightPercentage))}%
               </div>
             </div>
-            <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-6 border border-orange-200">
+            <div className="bg-linear-to-br from-orange-50 to-amber-50 rounded-2xl p-6 border border-orange-200">
               <div className="flex items-center gap-3 mb-2">
                 <svg
                   className="w-5 h-5 text-amber-500"
@@ -427,7 +427,7 @@ export default function LightSensorPage() {
                 %
               </div>
             </div>
-            <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-6 border border-orange-200">
+            <div className="bg-linear-to-br from-orange-50 to-amber-50 rounded-2xl p-6 border border-orange-200">
               <div className="flex items-center gap-3 mb-2">
                 <svg
                   className="w-5 h-5 text-amber-600"

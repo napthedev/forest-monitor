@@ -412,7 +412,7 @@ export default function Home() {
         <header className="text-center mb-12">
           <div className="flex items-center justify-center gap-3 mb-4">
             <TreePine className="w-12 h-12 text-emerald-600" />
-            <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-700 via-green-600 to-teal-600">
+            <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-linear-to-r from-emerald-700 via-green-600 to-teal-600">
               Forest Monitor
             </h1>
           </div>
@@ -425,9 +425,9 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Light Sensor Card */}
           <Link href="/light" className="group">
-            <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-3xl p-6 border border-orange-200 shadow-lg shadow-orange-100/50 hover:shadow-xl hover:shadow-orange-100/70 transition-all duration-300 hover:scale-[1.02] h-full">
+            <div className="bg-linear-to-br from-orange-50 to-amber-50 rounded-3xl p-6 border border-orange-200 shadow-lg shadow-orange-100/50 hover:shadow-xl hover:shadow-orange-100/70 transition-all duration-300 hover:scale-[1.02] h-full">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-200">
+                <div className="w-12 h-12 bg-linear-to-br from-orange-500 to-amber-500 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-200">
                   <Sun className="w-6 h-6 text-white" />
                 </div>
                 <div>
@@ -518,9 +518,9 @@ export default function Home() {
 
           {/* Motion Sensor Card */}
           <Link href="/motion" className="group">
-            <div className="bg-gradient-to-br from-blue-50 to-sky-50 rounded-3xl p-6 border border-blue-200 shadow-lg shadow-blue-100/50 hover:shadow-xl hover:shadow-blue-100/70 transition-all duration-300 hover:scale-[1.02] h-full">
+            <div className="bg-linear-to-br from-blue-50 to-sky-50 rounded-3xl p-6 border border-blue-200 shadow-lg shadow-blue-100/50 hover:shadow-xl hover:shadow-blue-100/70 transition-all duration-300 hover:scale-[1.02] h-full">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-sky-500 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-200">
+                <div className="w-12 h-12 bg-linear-to-br from-blue-500 to-sky-500 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-200">
                   <PersonStanding className="w-6 h-6 text-white" />
                 </div>
                 <div>
@@ -551,7 +551,7 @@ export default function Home() {
                         }`}
                         style={{ width: "80px", height: "80px" }}
                       />
-                      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-100 to-sky-100 flex items-center justify-center relative">
+                      <div className="w-20 h-20 rounded-full bg-linear-to-br from-blue-100 to-sky-100 flex items-center justify-center relative">
                         <PersonStanding
                           className={`w-10 h-10 ${
                             lastMotionTimestamp &&
@@ -604,9 +604,9 @@ export default function Home() {
 
           {/* Gas Sensor Card */}
           <Link href="/gas" className="group">
-            <div className="bg-gradient-to-br from-gray-50 to-slate-50 rounded-3xl p-6 border border-gray-200 shadow-lg shadow-gray-100/50 hover:shadow-xl hover:shadow-gray-100/70 transition-all duration-300 hover:scale-[1.02] h-full">
+            <div className="bg-linear-to-br from-gray-50 to-slate-50 rounded-3xl p-6 border border-gray-200 shadow-lg shadow-gray-100/50 hover:shadow-xl hover:shadow-gray-100/70 transition-all duration-300 hover:scale-[1.02] h-full">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-gray-500 to-slate-500 rounded-2xl flex items-center justify-center shadow-lg shadow-gray-200">
+                <div className="w-12 h-12 bg-linear-to-br from-gray-500 to-slate-500 rounded-2xl flex items-center justify-center shadow-lg shadow-gray-200">
                   <Cloud className="w-6 h-6 text-white" />
                 </div>
                 <div>
@@ -696,7 +696,7 @@ export default function Home() {
           {/* Flame Sensor Card */}
           <Link href="/flame" className="group">
             <div
-              className={`bg-gradient-to-br from-red-50 to-rose-50 rounded-3xl p-6 border shadow-lg transition-all duration-300 hover:scale-[1.02] h-full relative ${
+              className={`bg-linear-to-br from-red-50 to-rose-50 rounded-3xl p-6 border shadow-lg transition-all duration-300 hover:scale-[1.02] h-full relative ${
                 isFireAlert
                   ? "border-red-500 shadow-red-200/70 animate-pulse"
                   : "border-red-200 shadow-red-100/50 hover:shadow-xl hover:shadow-red-100/70"
@@ -709,7 +709,7 @@ export default function Home() {
                 </div>
               )}
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-rose-500 rounded-2xl flex items-center justify-center shadow-lg shadow-red-200">
+                <div className="w-12 h-12 bg-linear-to-br from-red-500 to-rose-500 rounded-2xl flex items-center justify-center shadow-lg shadow-red-200">
                   <Flame className="w-6 h-6 text-white" />
                 </div>
                 <div>
@@ -798,9 +798,9 @@ export default function Home() {
 
           {/* Soil Moisture Sensor Card */}
           <Link href="/soil-moisture" className="group">
-            <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-3xl p-6 border border-amber-200 shadow-lg shadow-amber-100/50 hover:shadow-xl hover:shadow-amber-100/70 transition-all duration-300 hover:scale-[1.02] h-full">
+            <div className="bg-linear-to-br from-amber-50 to-yellow-50 rounded-3xl p-6 border border-amber-200 shadow-lg shadow-amber-100/50 hover:shadow-xl hover:shadow-amber-100/70 transition-all duration-300 hover:scale-[1.02] h-full">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-amber-700 to-yellow-600 rounded-2xl flex items-center justify-center shadow-lg shadow-amber-200">
+                <div className="w-12 h-12 bg-linear-to-br from-amber-700 to-yellow-600 rounded-2xl flex items-center justify-center shadow-lg shadow-amber-200">
                   <Droplets className="w-6 h-6 text-white" />
                 </div>
                 <div>

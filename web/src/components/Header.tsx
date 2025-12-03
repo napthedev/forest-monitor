@@ -136,7 +136,7 @@ export default function Header() {
               className={`w-8 h-8 ${colors.logoIcon} group-hover:scale-110 transition-transform`}
             />
             <span
-              className={`text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r ${colors.logoGradient}`}
+              className={`text-xl font-bold text-transparent bg-clip-text bg-linear-to-r ${colors.logoGradient}`}
             >
               Forest Monitor
             </span>
