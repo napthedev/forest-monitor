@@ -180,6 +180,23 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [lastMoistureTimestamp]);
 
+  // Update motion relative time every second
+  useEffect(() => {
+    if (lastMotionTimestamp === null) return;
+
+    const updateMotionRelativeTime = () => {
+      setMotionRelativeTime(formatRelativeTime(lastMotionTimestamp));
+    };
+
+    // Update immediately
+    updateMotionRelativeTime();
+
+    // Update every second
+    const interval = setInterval(updateMotionRelativeTime, 1000);
+
+    return () => clearInterval(interval);
+  }, [lastMotionTimestamp]);
+
   // Fetch light sensor data (last 10 readings for preview)
   useEffect(() => {
     const sensorsRef = ref(database, "/sensors/light");
