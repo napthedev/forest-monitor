@@ -11,11 +11,18 @@
 #define ENABLE_LEGACY_TOKEN
 #include <FirebaseClient.h>
 
-// WiFi configuration for WPA2 Enterprise connection
-const char *ssid = WIFI_SSID;
-const char *identity = WIFI_IDENTITY;
-const char *username = WIFI_USERNAME;
-const char *password = WIFI_PASSWORD;
+// Primary WiFi configuration (WPA2-Personal)
+const char *primarySsid = PRIMARY_WIFI_SSID;
+const char *primaryPassword = PRIMARY_WIFI_PASSWORD;
+
+// Secondary WiFi configuration (WPA2-Enterprise - fallback)
+const char *secondarySsid = SECONDARY_WIFI_SSID;
+const char *secondaryIdentity = SECONDARY_WIFI_IDENTITY;
+const char *secondaryUsername = SECONDARY_WIFI_USERNAME;
+const char *secondaryPassword = SECONDARY_WIFI_PASSWORD;
+
+// Track which network is currently connected
+bool usingPrimaryWiFi = false;
 
 // Firebase configuration settings
 #define FIREBASE_HOST FIREBASE_HOST_URL
@@ -52,6 +59,69 @@ LegacyToken legacy_token(FIREBASE_AUTH);
 FirebaseApp app;
 RealtimeDatabase Database;
 
+// Function to connect to primary WiFi (WPA2-Personal)
+bool connectPrimaryWiFi() {
+  Serial.println("Attempting primary WiFi (WPA2-Personal)...");
+  Serial.print("SSID: ");
+  Serial.println(primarySsid);
+
+  WiFi.disconnect(true);
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(primarySsid, primaryPassword);
+
+  int attempts = 20; // 10 seconds (20 * 500ms)
+  while (WiFi.status() != WL_CONNECTED && attempts-- > 0) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println();
+  return WiFi.status() == WL_CONNECTED;
+}
+
+// Function to connect to secondary WiFi (WPA2-Enterprise)
+bool connectSecondaryWiFi() {
+  Serial.println("Attempting secondary WiFi (WPA2-Enterprise)...");
+  Serial.print("SSID: ");
+  Serial.println(secondarySsid);
+
+  WiFi.disconnect(true);
+  WiFi.mode(WIFI_STA);
+
+  esp_wifi_sta_wpa2_ent_set_identity((uint8_t *)secondaryIdentity,
+                                     strlen(secondaryIdentity));
+  esp_wifi_sta_wpa2_ent_set_username((uint8_t *)secondaryUsername,
+                                     strlen(secondaryUsername));
+  esp_wifi_sta_wpa2_ent_set_password((uint8_t *)secondaryPassword,
+                                     strlen(secondaryPassword));
+  esp_wifi_sta_wpa2_ent_enable();
+
+  WiFi.begin(secondarySsid);
+
+  int attempts = 40; // 20 seconds (40 * 500ms)
+  while (WiFi.status() != WL_CONNECTED && attempts-- > 0) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println();
+  return WiFi.status() == WL_CONNECTED;
+}
+
+// Main connection function with fallback
+void connectWiFiWithFallback() {
+  if (connectPrimaryWiFi()) {
+    usingPrimaryWiFi = true;
+    Serial.println("Connected to primary WiFi");
+  } else if (connectSecondaryWiFi()) {
+    usingPrimaryWiFi = false;
+    Serial.println("Connected to secondary WiFi (enterprise)");
+  } else {
+    Serial.println("All WiFi connections failed. Restarting...");
+    ESP.restart();
+  }
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
+}
+
 // Setup function: Initialize serial, WiFi, and Firebase
 void setup() {
   // Initialize serial communication for debugging
@@ -64,43 +134,8 @@ void setup() {
   // Initialize vibration sensor pin
   pinMode(VIBRATION_SENSOR_PIN, INPUT);
 
-  Serial.println();
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
-
-  // Reset WiFi settings and set mode to Station (client)
-  WiFi.disconnect(true);
-  WiFi.mode(WIFI_STA);
-
-  // Configure WPA2 Enterprise parameters
-  // Set identity, username, and password for authentication
-  esp_wifi_sta_wpa2_ent_set_identity((uint8_t *)identity, strlen(identity));
-  esp_wifi_sta_wpa2_ent_set_username((uint8_t *)username, strlen(username));
-  esp_wifi_sta_wpa2_ent_set_password((uint8_t *)password, strlen(password));
-  esp_wifi_sta_wpa2_ent_enable(); // Enable WPA2 Enterprise mode
-
-  // Start connection to the access point
-  WiFi.begin(ssid);
-
-  // Wait for connection with timeout handling
-  int counter = 0;
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-    counter++;
-    if (counter > 60) { // Timeout after 30s (60 * 500ms)
-      Serial.println("\nConnection failed. Retrying...");
-      counter = 0;
-      WiFi.disconnect(true);
-      WiFi.begin(ssid);
-    }
-  }
-
-  // Print connection details upon success
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
+  // Connect to WiFi with fallback
+  connectWiFiWithFallback();
 
   // Firebase Setup
   Serial.printf("Firebase Client v%s\n", FIREBASE_CLIENT_VERSION);
@@ -229,24 +264,7 @@ void loop() {
     lastWifiCheck = millis();
     if (WiFi.status() != WL_CONNECTED) {
       Serial.println("WiFi connection lost. Reconnecting...");
-      WiFi.disconnect(true);
-      WiFi.mode(WIFI_STA);
-
-      // Re-configure WPA2 Enterprise settings
-      esp_wifi_sta_wpa2_ent_set_identity((uint8_t *)identity, strlen(identity));
-      esp_wifi_sta_wpa2_ent_set_username((uint8_t *)username, strlen(username));
-      esp_wifi_sta_wpa2_ent_set_password((uint8_t *)password, strlen(password));
-      esp_wifi_sta_wpa2_ent_enable();
-      WiFi.begin(ssid);
-
-      // Wait until reconnected
-      while (WiFi.status() != WL_CONNECTED) {
-        delay(500);
-        Serial.print(".");
-      }
-      Serial.println("\nReconnected.");
-      Serial.print("IP address: ");
-      Serial.println(WiFi.localIP());
+      connectWiFiWithFallback();
     }
   }
 }
