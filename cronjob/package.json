@@ -1,0 +1,17 @@
+{
+  "name": "cronjob",
+  "version": "1.0.0",
+  "description": "Cronjob to delete old sensor records from Firebase Realtime Database",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "firebase": "^12.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "tsx": "^4.19.2",
+    "typescript": "^5"
+  }
+}

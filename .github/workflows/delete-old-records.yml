@@ -1,0 +1,32 @@
+name: Delete Old Sensor Records
+
+on:
+  schedule:
+    # Run every day at 00:00 UTC
+    - cron: "0 0 * * *"
+  # Allow manual trigger
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        working-directory: cronjob
+        run: npm install
+
+      - name: Run cleanup script
+        working-directory: cronjob
+        env:
+          FIREBASE_DATABASE_URL: ${{ secrets.FIREBASE_DATABASE_URL }}
+          FIREBASE_AUTH_TOKEN: ${{ secrets.FIREBASE_AUTH_TOKEN }}
+        run: npm start

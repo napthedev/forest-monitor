@@ -1,4 +1,5 @@
 // Include necessary libraries for Arduino, WiFi, and Firebase
+#include "PushId.h"
 #include "esp_wpa2.h" // Include WPA2 Enterprise library
 #include "secrets.h"
 #include <Arduino.h>
@@ -112,14 +113,12 @@ void loop() {
       Serial.println("PIR: Motion detected!");
       pirState = HIGH;
 
-      // Push motion event to Firebase with timestamp
+      // Push motion event to Firebase with timestamp using local unique ID
       if (app.ready()) {
-        object_t motion_json, ts_json;
-        JsonWriter writer;
-        writer.create(ts_json, "timestamp",
-                      object_t("{\".sv\":\"timestamp\"}"));
-        writer.join(motion_json, 1, ts_json);
-        Database.push<object_t>(aClient, "/sensors/motion", motion_json);
+        String motionKey = generatePushId();
+        String motionJson = "{\"/sensors/motion/" + motionKey +
+                            "\":{\"timestamp\":{\".sv\":\"timestamp\"}}}";
+        Database.update<object_t>(aClient, "", object_t(motionJson));
       }
     }
   } else {
@@ -133,64 +132,41 @@ void loop() {
   if (app.ready() && (millis() - lastSyncTime >= SYNC_INTERVAL)) {
     lastSyncTime = millis();
 
-    // Read light sensor value
+    // Read all analog sensor values
     int lightValue = analogRead(LIGHT_SENSOR_PIN);
-    Serial.printf("Light sensor value: %d\n", lightValue);
-
-    // Create JSON with value and server timestamp
-    object_t json, val_json, ts_json;
-    JsonWriter writer;
-    writer.create(val_json, "value", lightValue);
-    writer.create(ts_json, "timestamp", object_t("{\".sv\":\"timestamp\"}"));
-    writer.join(json, 2, val_json, ts_json);
-
-    // Push to Firebase
-    Database.push<object_t>(aClient, "/sensors/light", json);
-
-    // Read gas sensor value
     int gasValue = analogRead(GAS_SENSOR_PIN);
-    Serial.printf("Gas sensor value: %d\n", gasValue);
-
-    // Create JSON with value and server timestamp for gas sensor
-    object_t gas_json, gas_val_json, gas_ts_json;
-    JsonWriter gas_writer;
-    gas_writer.create(gas_val_json, "value", gasValue);
-    gas_writer.create(gas_ts_json, "timestamp",
-                      object_t("{\".sv\":\"timestamp\"}"));
-    gas_writer.join(gas_json, 2, gas_val_json, gas_ts_json);
-
-    // Push gas data to Firebase
-    Database.push<object_t>(aClient, "/sensors/gas", gas_json);
-
-    // Read flame sensor value
     int flameValue = analogRead(FLAME_SENSOR_PIN);
-    Serial.printf("Flame sensor value: %d\n", flameValue);
-
-    // Create JSON with value and server timestamp for flame sensor
-    object_t flame_json, flame_val_json, flame_ts_json;
-    JsonWriter flame_writer;
-    flame_writer.create(flame_val_json, "value", flameValue);
-    flame_writer.create(flame_ts_json, "timestamp",
-                        object_t("{\".sv\":\"timestamp\"}"));
-    flame_writer.join(flame_json, 2, flame_val_json, flame_ts_json);
-
-    // Push flame data to Firebase
-    Database.push<object_t>(aClient, "/sensors/flame", flame_json);
-
-    // Read soil moisture sensor value
     int soilMoistureValue = analogRead(SOIL_MOISTURE_SENSOR_PIN);
-    Serial.printf("Soil moisture value: %d\n", soilMoistureValue);
 
-    // Create JSON with value and server timestamp for soil moisture sensor
-    object_t soil_json, soil_val_json, soil_ts_json;
-    JsonWriter soil_writer;
-    soil_writer.create(soil_val_json, "value", soilMoistureValue);
-    soil_writer.create(soil_ts_json, "timestamp",
-                       object_t("{\".sv\":\"timestamp\"}"));
-    soil_writer.join(soil_json, 2, soil_val_json, soil_ts_json);
+    Serial.printf("Light: %d, Gas: %d, Flame: %d, Soil: %d\n", lightValue,
+                  gasValue, flameValue, soilMoistureValue);
 
-    // Push soil moisture data to Firebase
-    Database.push<object_t>(aClient, "/sensors/soil-moisture", soil_json);
+    // Generate unique IDs locally for each sensor record
+    String lightKey = generatePushId();
+    String gasKey = generatePushId();
+    String flameKey = generatePushId();
+    String soilKey = generatePushId();
+
+    // Build batch update JSON string with all sensor records
+    // Using multi-path update format: { "path1": value1, "path2": value2, ... }
+    String batchJson = "{";
+    batchJson += "\"/sensors/light/" + lightKey +
+                 "\":{\"value\":" + String(lightValue) +
+                 ",\"timestamp\":{\".sv\":\"timestamp\"}},";
+    batchJson += "\"/sensors/gas/" + gasKey +
+                 "\":{\"value\":" + String(gasValue) +
+                 ",\"timestamp\":{\".sv\":\"timestamp\"}},";
+    batchJson += "\"/sensors/flame/" + flameKey +
+                 "\":{\"value\":" + String(flameValue) +
+                 ",\"timestamp\":{\".sv\":\"timestamp\"}},";
+    batchJson += "\"/sensors/soil-moisture/" + soilKey +
+                 "\":{\"value\":" + String(soilMoistureValue) +
+                 ",\"timestamp\":{\".sv\":\"timestamp\"}}";
+    batchJson += "}";
+
+    // Execute single atomic batch update
+    Database.update<object_t>(aClient, "", object_t(batchJson));
+    Serial.println("Batch sensor data pushed.");
   }
 
   // Check WiFi connection status periodically (every 5 seconds)
