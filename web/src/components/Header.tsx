@@ -37,6 +37,11 @@ const navLinks: NavLink[] = [
     icon: <PersonStanding className="w-5 h-5" />,
   },
   {
+    href: "/sound",
+    label: "Sound",
+    icon: <Volume2 className="w-5 h-5" />,
+  },
+  {
     href: "/vibration",
     label: "Vibration",
     icon: <Mountain className="w-5 h-5" />,
@@ -55,11 +60,6 @@ const navLinks: NavLink[] = [
     href: "/soil-moisture",
     label: "Soil Moisture",
     icon: <Droplets className="w-5 h-5" />,
-  },
-  {
-    href: "/sound",
-    label: "Sound",
-    icon: <Volume2 className="w-5 h-5" />,
   },
 ];
 
