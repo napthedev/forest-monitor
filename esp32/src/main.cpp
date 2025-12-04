@@ -6,6 +6,11 @@
 #include <WiFi.h>
 #include <WiFiClientSecure.h> // Include WiFiClientSecure
 
+// OLED Display libraries
+#include <Adafruit_GFX.h>
+#include <Adafruit_SH110X.h>
+#include <Wire.h>
+
 // Define build options for Firebase library
 #define ENABLE_DATABASE
 #define ENABLE_LEGACY_TOKEN
@@ -31,7 +36,7 @@ bool usingPrimaryWiFi = false;
 // Sensor configuration
 #define LIGHT_SENSOR_PIN 36
 #define PIR_SENSOR_PIN 23
-#define VIBRATION_SENSOR_PIN 22
+#define VIBRATION_SENSOR_PIN 19
 #define GAS_SENSOR_PIN 39
 #define FLAME_SENSOR_PIN 34
 #define SOIL_MOISTURE_SENSOR_PIN 35
@@ -43,6 +48,13 @@ bool usingPrimaryWiFi = false;
 
 // Sound sensor sampling window duration (100ms)
 #define SOUND_SAMPLING_DURATION_MS 100
+
+// OLED Display configuration
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_RESET -1
+#define I2C_ADDRESS 0x3C
+#define DISPLAY_UPDATE_INTERVAL 1000 // 1 second
 
 // PIR sensor state tracking
 int pirState = LOW;
@@ -61,6 +73,55 @@ AsyncClient aClient(ssl_client);
 LegacyToken legacy_token(FIREBASE_AUTH);
 FirebaseApp app;
 RealtimeDatabase Database;
+
+// OLED Display object
+Adafruit_SH1106G display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+// Display timing variables
+unsigned long lastDisplayUpdate = 0;
+unsigned long lastSuccessfulSync = 0;
+
+// Function to update OLED display with current status
+void updateDisplay() {
+  display.clearDisplay();
+  display.setCursor(0, 0);
+
+  // WiFi Status
+  display.print("WiFi: ");
+  if (WiFi.status() == WL_CONNECTED) {
+    display.println(WiFi.SSID());
+  } else {
+    display.println("Disconnected");
+  }
+
+  // IP Address
+  display.print("IP: ");
+  if (WiFi.status() == WL_CONNECTED) {
+    display.println(WiFi.localIP());
+  } else {
+    display.println("N/A");
+  }
+
+  // Firebase Status
+  display.print("Firebase: ");
+  display.println(app.ready() ? "Connected" : "Disconnected");
+
+  // Last Sync Time
+  display.print("Last sync: ");
+  if (lastSuccessfulSync == 0) {
+    display.println("Never");
+  } else {
+    unsigned long elapsed = (millis() - lastSuccessfulSync) / 1000;
+    if (elapsed == 0) {
+      display.println("Just now");
+    } else {
+      display.print(elapsed);
+      display.println("s ago");
+    }
+  }
+
+  display.display();
+}
 
 // Function to connect to primary WiFi (WPA2-Personal)
 bool connectPrimaryWiFi() {
@@ -158,6 +219,24 @@ void setup() {
   // Initialize serial communication for debugging
   Serial.begin(115200);
   delay(1000);
+
+  // Initialize OLED display
+  Wire.begin(21, 22); // SDA=21, SCL=22
+  delay(250);         // Wait for display to power up
+
+  if (!display.begin(I2C_ADDRESS, true)) {
+    Serial.println("OLED display initialization failed!");
+    for (;;)
+      ; // Halt execution
+  }
+
+  display.clearDisplay();
+  display.setTextSize(1, 2);
+  display.setTextColor(SH110X_WHITE);
+  display.setCursor(0, 0);
+  display.println("Initializing...");
+  display.display();
+  Serial.println("OLED display initialized.");
 
   // Initialize PIR sensor pin
   pinMode(PIR_SENSOR_PIN, INPUT);
@@ -286,6 +365,15 @@ void loop() {
     // Execute single atomic batch update
     Database.update<object_t>(aClient, "", object_t(batchJson));
     Serial.println("Batch sensor data pushed.");
+
+    // Update last successful sync time for display
+    lastSuccessfulSync = millis();
+  }
+
+  // Update OLED display every second
+  if (millis() - lastDisplayUpdate >= DISPLAY_UPDATE_INTERVAL) {
+    lastDisplayUpdate = millis();
+    updateDisplay();
   }
 
   // Check WiFi connection status periodically (every 5 seconds)
