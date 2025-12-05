@@ -11,6 +11,9 @@
 #include <Adafruit_SH110X.h>
 #include <Wire.h>
 
+// DHT11 Temperature & Humidity sensor library
+#include <DHT.h>
+
 // Define build options for Firebase library
 #define ENABLE_DATABASE
 #define ENABLE_LEGACY_TOKEN
@@ -41,6 +44,8 @@ bool usingPrimaryWiFi = false;
 #define FLAME_SENSOR_PIN 34
 #define SOIL_MOISTURE_SENSOR_PIN 35
 #define SOUND_SENSOR_PIN 32
+#define DHT_SENSOR_PIN 18
+#define DHTTYPE DHT11
 #define SYNC_INTERVAL 10000 // 10 seconds
 
 // Debounce interval for event-based sensors (3 seconds)
@@ -76,6 +81,9 @@ RealtimeDatabase Database;
 
 // OLED Display object
 Adafruit_SH1106G display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+// DHT sensor object
+DHT dht(DHT_SENSOR_PIN, DHTTYPE);
 
 // Display timing variables
 unsigned long lastDisplayUpdate = 0;
@@ -244,6 +252,10 @@ void setup() {
   // Initialize vibration sensor pin
   pinMode(VIBRATION_SENSOR_PIN, INPUT);
 
+  // Initialize DHT11 sensor
+  dht.begin();
+  Serial.println("DHT11 sensor initialized.");
+
   // Connect to WiFi with fallback
   connectWiFiWithFallback();
 
@@ -325,6 +337,8 @@ void loop() {
   if (app.ready() && (millis() - lastSyncTime >= SYNC_INTERVAL)) {
     lastSyncTime = millis();
 
+    Serial.println("--------------------------------");
+
     // Read all analog sensor values
     int lightValue = analogRead(LIGHT_SENSOR_PIN);
     int gasValue = analogRead(GAS_SENSOR_PIN);
@@ -332,8 +346,19 @@ void loop() {
     int soilMoistureValue = analogRead(SOIL_MOISTURE_SENSOR_PIN);
     int soundAmplitude = readSoundAmplitude();
 
+    // Read DHT11 temperature and humidity
+    float temperature = dht.readTemperature();
+    float humidity = dht.readHumidity();
+    bool dhtReadSuccess = !isnan(temperature) && !isnan(humidity);
+
     Serial.printf("Light: %d, Gas: %d, Flame: %d, Soil: %d\n", lightValue,
                   gasValue, flameValue, soilMoistureValue);
+    if (dhtReadSuccess) {
+      Serial.printf("Temperature: %.1f°C, Humidity: %.1f%%\n", temperature,
+                    humidity);
+    } else {
+      Serial.println("DHT11 read failed, skipping temperature/humidity.");
+    }
 
     // Generate unique IDs locally for each sensor record
     String lightKey = generatePushId();
@@ -341,6 +366,8 @@ void loop() {
     String flameKey = generatePushId();
     String soilKey = generatePushId();
     String soundKey = generatePushId();
+    String temperatureKey = dhtReadSuccess ? generatePushId() : "";
+    String humidityKey = dhtReadSuccess ? generatePushId() : "";
 
     // Build batch update JSON string with all sensor records
     // Using multi-path update format: { "path1": value1, "path2": value2, ... }
@@ -360,6 +387,17 @@ void loop() {
     batchJson += "\"/sensors/sound/" + soundKey +
                  "\":{\"amplitude\":" + String(soundAmplitude) +
                  ",\"timestamp\":{\".sv\":\"timestamp\"}}";
+
+    // Add temperature and humidity if DHT11 read was successful
+    if (dhtReadSuccess) {
+      batchJson += ",\"/sensors/temperature/" + temperatureKey +
+                   "\":{\"value\":" + String(temperature, 1) +
+                   ",\"timestamp\":{\".sv\":\"timestamp\"}}";
+      batchJson += ",\"/sensors/humidity/" + humidityKey +
+                   "\":{\"value\":" + String(humidity, 1) +
+                   ",\"timestamp\":{\".sv\":\"timestamp\"}}";
+    }
+
     batchJson += "}";
 
     // Execute single atomic batch update

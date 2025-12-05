@@ -12,6 +12,7 @@ import {
   Droplets,
   Volume2,
   Mountain,
+  Thermometer,
 } from "lucide-react";
 
 interface NavLink {
@@ -59,6 +60,16 @@ const navLinks: NavLink[] = [
   {
     href: "/soil-moisture",
     label: "Soil Moisture",
+    icon: <Droplets className="w-5 h-5" />,
+  },
+  {
+    href: "/temperature",
+    label: "Temperature",
+    icon: <Thermometer className="w-5 h-5" />,
+  },
+  {
+    href: "/humidity",
+    label: "Humidity",
     icon: <Droplets className="w-5 h-5" />,
   },
 ];
@@ -140,6 +151,28 @@ const getRouteColors = (pathname: string) => {
       activeText: "text-cyan-700",
       hoverBg: "hover:bg-cyan-50",
       hoverText: "hover:text-cyan-600",
+    };
+  }
+  if (pathname === "/temperature") {
+    return {
+      border: "border-orange-100",
+      logoIcon: "text-orange-500",
+      logoGradient: "from-orange-600 via-amber-500 to-yellow-500",
+      activeBg: "bg-orange-100",
+      activeText: "text-orange-600",
+      hoverBg: "hover:bg-orange-50",
+      hoverText: "hover:text-orange-500",
+    };
+  }
+  if (pathname === "/humidity") {
+    return {
+      border: "border-sky-100",
+      logoIcon: "text-sky-400",
+      logoGradient: "from-sky-500 via-cyan-400 to-blue-400",
+      activeBg: "bg-sky-100",
+      activeText: "text-sky-500",
+      hoverBg: "hover:bg-sky-50",
+      hoverText: "hover:text-sky-400",
     };
   }
   // Default: green theme for dashboard

@@ -10,6 +10,8 @@ export const ROUTE_COLORS: Record<string, string> = {
   "/gas": "#4b5563", // gray-600
   "/flame": "#dc2626", // red-600
   "/soil-moisture": "#b45309", // amber-700
+  "/temperature": "#f97316", // orange-500
+  "/humidity": "#38bdf8", // sky-400
 };
 
 export const DEFAULT_ROUTE_COLOR = ROUTE_COLORS["/"];

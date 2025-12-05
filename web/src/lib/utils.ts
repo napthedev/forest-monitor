@@ -191,3 +191,47 @@ export function getSoundGradientColor(percentage: number | null): string {
   if (percentage < 75) return "from-cyan-600 to-sky-600";
   return "from-cyan-700 to-teal-600";
 }
+
+// Determine temperature description based on Celsius value
+export function getTemperatureDescription(temperature: number | null): string {
+  if (temperature === null) return "Unknown";
+  if (temperature < 0) return "Freezing";
+  if (temperature < 10) return "Cold";
+  if (temperature < 18) return "Cool";
+  if (temperature < 24) return "Comfortable";
+  if (temperature < 30) return "Warm";
+  if (temperature < 35) return "Hot";
+  return "Very Hot";
+}
+
+// Get gradient color based on temperature level
+export function getTemperatureGradientColor(
+  temperature: number | null
+): string {
+  if (temperature === null) return "from-gray-400 to-gray-500";
+  if (temperature < 10) return "from-blue-600 to-cyan-500";
+  if (temperature < 18) return "from-cyan-600 to-teal-500";
+  if (temperature < 24) return "from-green-600 to-emerald-500";
+  if (temperature < 30) return "from-orange-500 to-amber-500";
+  return "from-red-600 to-orange-500";
+}
+
+// Determine humidity description based on percentage
+export function getHumidityDescription(humidity: number | null): string {
+  if (humidity === null) return "Unknown";
+  if (humidity < 25) return "Very Dry";
+  if (humidity < 40) return "Dry";
+  if (humidity < 60) return "Comfortable";
+  if (humidity < 75) return "Humid";
+  return "Very Humid";
+}
+
+// Get gradient color based on humidity level
+export function getHumidityGradientColor(humidity: number | null): string {
+  if (humidity === null) return "from-gray-400 to-gray-500";
+  if (humidity < 25) return "from-amber-600 to-yellow-500";
+  if (humidity < 40) return "from-sky-500 to-cyan-400";
+  if (humidity < 60) return "from-sky-400 to-cyan-400";
+  if (humidity < 75) return "from-sky-500 to-blue-500";
+  return "from-blue-600 to-indigo-500";
+}

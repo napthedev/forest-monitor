@@ -12,6 +12,7 @@ import {
   Droplets,
   Volume2,
   Mountain,
+  Thermometer,
 } from "lucide-react";
 import { database } from "@/lib/firebase";
 import {
@@ -37,6 +38,8 @@ import {
   convertToSoundPercentage,
   getSoundDescription,
   isSoundAlert,
+  getTemperatureDescription,
+  getHumidityDescription,
 } from "@/lib/utils";
 
 interface LightSensorData {
@@ -62,6 +65,16 @@ interface SoilMoistureSensorData {
 interface SoundSensorData {
   timestamp: string;
   soundPercentage: number;
+}
+
+interface TemperatureSensorData {
+  timestamp: string;
+  temperature: number;
+}
+
+interface HumiditySensorData {
+  timestamp: string;
+  humidity: number;
 }
 
 export default function Home() {
@@ -124,6 +137,29 @@ export default function Home() {
     null
   );
   const [soundStatusText, setSoundStatusText] = useState<string>("Live");
+
+  // Temperature sensor state
+  const [temperatureData, setTemperatureData] = useState<
+    TemperatureSensorData[]
+  >([]);
+  const [currentTemperature, setCurrentTemperature] = useState<number | null>(
+    null
+  );
+  const [temperatureLoading, setTemperatureLoading] = useState(true);
+  const [lastTemperatureTimestamp, setLastTemperatureTimestamp] = useState<
+    number | null
+  >(null);
+  const [temperatureStatusText, setTemperatureStatusText] =
+    useState<string>("Live");
+
+  // Humidity sensor state
+  const [humidityData, setHumidityData] = useState<HumiditySensorData[]>([]);
+  const [currentHumidity, setCurrentHumidity] = useState<number | null>(null);
+  const [humidityLoading, setHumidityLoading] = useState(true);
+  const [lastHumidityTimestamp, setLastHumidityTimestamp] = useState<
+    number | null
+  >(null);
+  const [humidityStatusText, setHumidityStatusText] = useState<string>("Live");
 
   // Check if fire alert (percentage >= threshold, which corresponds to raw value < 1000)
   const flameAlertThreshold = getFlameAlertThreshold();
@@ -226,6 +262,34 @@ export default function Home() {
 
     return () => clearInterval(interval);
   }, [lastSoundTimestamp]);
+
+  // Update temperature status text every second
+  useEffect(() => {
+    if (lastTemperatureTimestamp === null) return;
+
+    const updateStatus = () => {
+      setTemperatureStatusText(getAnalogSensorStatus(lastTemperatureTimestamp));
+    };
+
+    updateStatus();
+    const interval = setInterval(updateStatus, 1000);
+
+    return () => clearInterval(interval);
+  }, [lastTemperatureTimestamp]);
+
+  // Update humidity status text every second
+  useEffect(() => {
+    if (lastHumidityTimestamp === null) return;
+
+    const updateStatus = () => {
+      setHumidityStatusText(getAnalogSensorStatus(lastHumidityTimestamp));
+    };
+
+    updateStatus();
+    const interval = setInterval(updateStatus, 1000);
+
+    return () => clearInterval(interval);
+  }, [lastHumidityTimestamp]);
 
   // Update motion relative time every second
   useEffect(() => {
@@ -521,6 +585,90 @@ export default function Home() {
     return () => unsubscribe();
   }, []);
 
+  // Fetch temperature sensor data (last 10 readings for preview)
+  useEffect(() => {
+    const sensorsRef = ref(database, "/sensors/temperature");
+    const sensorsQuery = query(
+      sensorsRef,
+      orderByChild("timestamp"),
+      limitToLast(10)
+    );
+
+    const unsubscribe = onValue(sensorsQuery, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const formattedData: TemperatureSensorData[] = Object.entries(data).map(
+          ([, record]) => {
+            const { timestamp, value } = record as {
+              timestamp: number;
+              value: number;
+            };
+            return {
+              timestamp: String(timestamp),
+              temperature: value,
+            };
+          }
+        );
+
+        formattedData.sort(
+          (a, b) => parseInt(a.timestamp) - parseInt(b.timestamp)
+        );
+
+        setTemperatureData(formattedData);
+        if (formattedData.length > 0) {
+          const lastRecord = formattedData[formattedData.length - 1];
+          setCurrentTemperature(lastRecord.temperature);
+          setLastTemperatureTimestamp(parseInt(lastRecord.timestamp));
+        }
+      }
+      setTemperatureLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Fetch humidity sensor data (last 10 readings for preview)
+  useEffect(() => {
+    const sensorsRef = ref(database, "/sensors/humidity");
+    const sensorsQuery = query(
+      sensorsRef,
+      orderByChild("timestamp"),
+      limitToLast(10)
+    );
+
+    const unsubscribe = onValue(sensorsQuery, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const formattedData: HumiditySensorData[] = Object.entries(data).map(
+          ([, record]) => {
+            const { timestamp, value } = record as {
+              timestamp: number;
+              value: number;
+            };
+            return {
+              timestamp: String(timestamp),
+              humidity: value,
+            };
+          }
+        );
+
+        formattedData.sort(
+          (a, b) => parseInt(a.timestamp) - parseInt(b.timestamp)
+        );
+
+        setHumidityData(formattedData);
+        if (formattedData.length > 0) {
+          const lastRecord = formattedData[formattedData.length - 1];
+          setCurrentHumidity(lastRecord.humidity);
+          setLastHumidityTimestamp(parseInt(lastRecord.timestamp));
+        }
+      }
+      setHumidityLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   return (
     <div className="min-h-screen bg-white relative overflow-hidden">
       {/* Forest Background Pattern */}
@@ -553,7 +701,7 @@ export default function Home() {
         </header>
 
         {/* Sensor Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Light Sensor Card */}
           <Link href="/light" className="group">
             <div className="bg-linear-to-br from-orange-50 to-amber-50 rounded-3xl p-6 border border-orange-200 shadow-lg shadow-orange-100/50 hover:shadow-xl hover:shadow-orange-100/70 transition-all duration-300 hover:scale-[1.02] h-full">
@@ -1206,6 +1354,190 @@ export default function Home() {
                         } animate-pulse`}
                       />
                       {moistureStatusText}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </Link>
+
+          {/* Temperature Sensor Card */}
+          <Link href="/temperature" className="group">
+            <div className="bg-linear-to-br from-orange-50 to-amber-50 rounded-3xl p-6 border border-orange-200 shadow-lg shadow-orange-100/50 hover:shadow-xl hover:shadow-orange-100/70 transition-all duration-300 hover:scale-[1.02] h-full">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-linear-to-br from-orange-500 to-amber-500 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-200">
+                  <Thermometer className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-800">
+                    Temperature
+                  </h2>
+                  <p className="text-sm text-gray-500">Ambient temperature</p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-orange-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+
+              {temperatureLoading ? (
+                <div className="animate-pulse">
+                  <div className="h-24 bg-orange-200 rounded-xl mb-4" />
+                  <div className="h-6 w-24 bg-orange-200 rounded" />
+                </div>
+              ) : (
+                <>
+                  {/* Mini Chart Preview */}
+                  <div className="h-24 mb-4">
+                    {temperatureData.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={temperatureData}>
+                          <defs>
+                            <linearGradient
+                              id="colorTemperaturePreview"
+                              x1="0"
+                              y1="0"
+                              x2="0"
+                              y2="1"
+                            >
+                              <stop
+                                offset="5%"
+                                stopColor="#f97316"
+                                stopOpacity={0.6}
+                              />
+                              <stop
+                                offset="95%"
+                                stopColor="#f97316"
+                                stopOpacity={0.1}
+                              />
+                            </linearGradient>
+                          </defs>
+                          <Area
+                            type="monotone"
+                            dataKey="temperature"
+                            stroke="#f97316"
+                            strokeWidth={2}
+                            fill="url(#colorTemperaturePreview)"
+                            dot={false}
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="h-full flex items-center justify-center text-gray-400 text-sm">
+                        No data available
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Current Value */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-3xl font-bold text-gray-800">
+                        {currentTemperature !== null
+                          ? `${currentTemperature}°C`
+                          : "—"}
+                      </span>
+                      <span className="text-sm text-gray-500 ml-2">
+                        {getTemperatureDescription(currentTemperature)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-orange-600">
+                      <span
+                        className={`w-2 h-2 rounded-full ${
+                          temperatureStatusText === "Live"
+                            ? "bg-orange-500"
+                            : "bg-gray-400"
+                        } animate-pulse`}
+                      />
+                      {temperatureStatusText}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </Link>
+
+          {/* Humidity Sensor Card */}
+          <Link href="/humidity" className="group">
+            <div className="bg-linear-to-br from-sky-50 to-cyan-50 rounded-3xl p-6 border border-sky-200 shadow-lg shadow-sky-100/50 hover:shadow-xl hover:shadow-sky-100/70 transition-all duration-300 hover:scale-[1.02] h-full">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-linear-to-br from-sky-400 to-cyan-400 rounded-2xl flex items-center justify-center shadow-lg shadow-sky-200">
+                  <Droplets className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-800">
+                    Humidity
+                  </h2>
+                  <p className="text-sm text-gray-500">Air humidity level</p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-sky-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+
+              {humidityLoading ? (
+                <div className="animate-pulse">
+                  <div className="h-24 bg-sky-200 rounded-xl mb-4" />
+                  <div className="h-6 w-24 bg-sky-200 rounded" />
+                </div>
+              ) : (
+                <>
+                  {/* Mini Chart Preview */}
+                  <div className="h-24 mb-4">
+                    {humidityData.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={humidityData}>
+                          <defs>
+                            <linearGradient
+                              id="colorHumidityPreview"
+                              x1="0"
+                              y1="0"
+                              x2="0"
+                              y2="1"
+                            >
+                              <stop
+                                offset="5%"
+                                stopColor="#38bdf8"
+                                stopOpacity={0.6}
+                              />
+                              <stop
+                                offset="95%"
+                                stopColor="#38bdf8"
+                                stopOpacity={0.1}
+                              />
+                            </linearGradient>
+                          </defs>
+                          <Area
+                            type="monotone"
+                            dataKey="humidity"
+                            stroke="#38bdf8"
+                            strokeWidth={2}
+                            fill="url(#colorHumidityPreview)"
+                            dot={false}
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="h-full flex items-center justify-center text-gray-400 text-sm">
+                        No data available
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Current Value */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-3xl font-bold text-gray-800">
+                        {currentHumidity !== null ? `${currentHumidity}%` : "—"}
+                      </span>
+                      <span className="text-sm text-gray-500 ml-2">
+                        {getHumidityDescription(currentHumidity)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-sky-500">
+                      <span
+                        className={`w-2 h-2 rounded-full ${
+                          humidityStatusText === "Live"
+                            ? "bg-sky-400"
+                            : "bg-gray-400"
+                        } animate-pulse`}
+                      />
+                      {humidityStatusText}
                     </div>
                   </div>
                 </>
