@@ -13,6 +13,7 @@ import {
   Volume2,
   Mountain,
   Thermometer,
+  Earth,
 } from "lucide-react";
 
 interface NavLink {
@@ -48,19 +49,9 @@ const navLinks: NavLink[] = [
     icon: <Mountain className="w-5 h-5" />,
   },
   {
-    href: "/gas",
-    label: "Gas",
-    icon: <Cloud className="w-5 h-5" />,
-  },
-  {
     href: "/flame",
     label: "Flame",
     icon: <Flame className="w-5 h-5" />,
-  },
-  {
-    href: "/soil-moisture",
-    label: "Soil Moisture",
-    icon: <Droplets className="w-5 h-5" />,
   },
   {
     href: "/temperature",
@@ -71,6 +62,16 @@ const navLinks: NavLink[] = [
     href: "/humidity",
     label: "Humidity",
     icon: <Droplets className="w-5 h-5" />,
+  },
+  {
+    href: "/soil-moisture",
+    label: "Soil Moisture",
+    icon: <Earth className="w-5 h-5" />,
+  },
+  {
+    href: "/gas",
+    label: "Gas",
+    icon: <Cloud className="w-5 h-5" />,
   },
 ];
 

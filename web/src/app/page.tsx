@@ -13,6 +13,7 @@ import {
   Volume2,
   Mountain,
   Thermometer,
+  Earth,
 } from "lucide-react";
 import { database } from "@/lib/firebase";
 import {
@@ -1070,97 +1071,6 @@ export default function Home() {
             </div>
           </Link>
 
-          {/* Gas Sensor Card */}
-          <Link href="/gas" className="group">
-            <div className="bg-linear-to-br from-gray-50 to-slate-50 rounded-3xl p-6 border border-gray-200 shadow-lg shadow-gray-100/50 hover:shadow-xl hover:shadow-gray-100/70 transition-all duration-300 hover:scale-[1.02] h-full">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-linear-to-br from-gray-500 to-slate-500 rounded-2xl flex items-center justify-center shadow-lg shadow-gray-200">
-                  <Cloud className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-800">
-                    Gas Sensor
-                  </h2>
-                  <p className="text-sm text-gray-500">Smoke & gas detection</p>
-                </div>
-                <ChevronRight className="w-5 h-5 text-gray-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
-
-              {gasLoading ? (
-                <div className="animate-pulse">
-                  <div className="h-24 bg-gray-200 rounded-xl mb-4" />
-                  <div className="h-6 w-24 bg-gray-200 rounded" />
-                </div>
-              ) : (
-                <>
-                  {/* Mini Chart Preview */}
-                  <div className="h-24 mb-4">
-                    {gasData.length > 0 ? (
-                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={gasData}>
-                          <defs>
-                            <linearGradient
-                              id="colorGasPreview"
-                              x1="0"
-                              y1="0"
-                              x2="0"
-                              y2="1"
-                            >
-                              <stop
-                                offset="5%"
-                                stopColor="#6b7280"
-                                stopOpacity={0.6}
-                              />
-                              <stop
-                                offset="95%"
-                                stopColor="#6b7280"
-                                stopOpacity={0.1}
-                              />
-                            </linearGradient>
-                          </defs>
-                          <Area
-                            type="monotone"
-                            dataKey="gasPercentage"
-                            stroke="#6b7280"
-                            strokeWidth={2}
-                            fill="url(#colorGasPreview)"
-                            dot={false}
-                          />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    ) : (
-                      <div className="h-full flex items-center justify-center text-gray-400 text-sm">
-                        No data available
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Current Value */}
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-3xl font-bold text-gray-800">
-                        {currentGas !== null ? `${currentGas}%` : "—"}
-                      </span>
-                      <span className="text-sm text-gray-500 ml-2">
-                        {getGasDescription(currentGas)}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1 text-xs text-gray-600">
-                      <span
-                        className={`w-2 h-2 rounded-full ${
-                          gasStatusText === "Live"
-                            ? "bg-amber-500"
-                            : "bg-gray-500"
-                        } animate-pulse`}
-                      />
-                      {gasStatusText}
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          </Link>
-
           {/* Flame Sensor Card */}
           <Link href="/flame" className="group">
             <div
@@ -1257,103 +1167,6 @@ export default function Home() {
                         } animate-pulse`}
                       />
                       {isFireAlert ? "Alert!" : flameStatusText}
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          </Link>
-
-          {/* Soil Moisture Sensor Card */}
-          <Link href="/soil-moisture" className="group">
-            <div className="bg-linear-to-br from-amber-50 to-yellow-50 rounded-3xl p-6 border border-amber-200 shadow-lg shadow-amber-100/50 hover:shadow-xl hover:shadow-amber-100/70 transition-all duration-300 hover:scale-[1.02] h-full">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-linear-to-br from-amber-700 to-yellow-600 rounded-2xl flex items-center justify-center shadow-lg shadow-amber-200">
-                  <Droplets className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-800">
-                    Soil Moisture
-                  </h2>
-                  <p className="text-sm text-gray-500">
-                    Ground water monitoring
-                  </p>
-                </div>
-                <ChevronRight className="w-5 h-5 text-amber-600 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
-
-              {soilMoistureLoading ? (
-                <div className="animate-pulse">
-                  <div className="h-24 bg-amber-200 rounded-xl mb-4" />
-                  <div className="h-6 w-24 bg-amber-200 rounded" />
-                </div>
-              ) : (
-                <>
-                  {/* Mini Chart Preview */}
-                  <div className="h-24 mb-4">
-                    {soilMoistureData.length > 0 ? (
-                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={soilMoistureData}>
-                          <defs>
-                            <linearGradient
-                              id="colorMoisturePreview"
-                              x1="0"
-                              y1="0"
-                              x2="0"
-                              y2="1"
-                            >
-                              <stop
-                                offset="5%"
-                                stopColor="#92400e"
-                                stopOpacity={0.6}
-                              />
-                              <stop
-                                offset="95%"
-                                stopColor="#92400e"
-                                stopOpacity={0.1}
-                              />
-                            </linearGradient>
-                          </defs>
-                          <Area
-                            type="monotone"
-                            dataKey="moisturePercentage"
-                            stroke="#92400e"
-                            strokeWidth={2}
-                            fill="url(#colorMoisturePreview)"
-                            dot={false}
-                          />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    ) : (
-                      <div className="h-full flex items-center justify-center text-gray-400 text-sm">
-                        No data available
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Current Value */}
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-3xl font-bold text-gray-800">
-                        {currentMoisture !== null ? `${currentMoisture}%` : "—"}
-                      </span>
-                      <span className="text-sm text-gray-500 ml-2">
-                        {getMoistureDescription(currentMoisture)}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1 text-xs text-amber-700">
-                      <span
-                        className={`w-2 h-2 rounded-full ${
-                          moistureStatusText === "Live"
-                            ? currentMoisture !== null && currentMoisture < 20
-                              ? "bg-red-500"
-                              : currentMoisture !== null && currentMoisture > 90
-                              ? "bg-blue-500"
-                              : "bg-amber-600"
-                            : "bg-gray-400"
-                        } animate-pulse`}
-                      />
-                      {moistureStatusText}
                     </div>
                   </div>
                 </>
@@ -1538,6 +1351,194 @@ export default function Home() {
                         } animate-pulse`}
                       />
                       {humidityStatusText}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </Link>
+
+          {/* Soil Moisture Sensor Card */}
+          <Link href="/soil-moisture" className="group">
+            <div className="bg-linear-to-br from-amber-50 to-yellow-50 rounded-3xl p-6 border border-amber-200 shadow-lg shadow-amber-100/50 hover:shadow-xl hover:shadow-amber-100/70 transition-all duration-300 hover:scale-[1.02] h-full">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-linear-to-br from-amber-700 to-yellow-600 rounded-2xl flex items-center justify-center shadow-lg shadow-amber-200">
+                  <Earth className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-800">
+                    Soil Moisture
+                  </h2>
+                  <p className="text-sm text-gray-500">
+                    Ground water monitoring
+                  </p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-amber-600 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+
+              {soilMoistureLoading ? (
+                <div className="animate-pulse">
+                  <div className="h-24 bg-amber-200 rounded-xl mb-4" />
+                  <div className="h-6 w-24 bg-amber-200 rounded" />
+                </div>
+              ) : (
+                <>
+                  {/* Mini Chart Preview */}
+                  <div className="h-24 mb-4">
+                    {soilMoistureData.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={soilMoistureData}>
+                          <defs>
+                            <linearGradient
+                              id="colorMoisturePreview"
+                              x1="0"
+                              y1="0"
+                              x2="0"
+                              y2="1"
+                            >
+                              <stop
+                                offset="5%"
+                                stopColor="#92400e"
+                                stopOpacity={0.6}
+                              />
+                              <stop
+                                offset="95%"
+                                stopColor="#92400e"
+                                stopOpacity={0.1}
+                              />
+                            </linearGradient>
+                          </defs>
+                          <Area
+                            type="monotone"
+                            dataKey="moisturePercentage"
+                            stroke="#92400e"
+                            strokeWidth={2}
+                            fill="url(#colorMoisturePreview)"
+                            dot={false}
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="h-full flex items-center justify-center text-gray-400 text-sm">
+                        No data available
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Current Value */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-3xl font-bold text-gray-800">
+                        {currentMoisture !== null ? `${currentMoisture}%` : "—"}
+                      </span>
+                      <span className="text-sm text-gray-500 ml-2">
+                        {getMoistureDescription(currentMoisture)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-amber-700">
+                      <span
+                        className={`w-2 h-2 rounded-full ${
+                          moistureStatusText === "Live"
+                            ? currentMoisture !== null && currentMoisture < 20
+                              ? "bg-red-500"
+                              : currentMoisture !== null && currentMoisture > 90
+                              ? "bg-blue-500"
+                              : "bg-amber-600"
+                            : "bg-gray-400"
+                        } animate-pulse`}
+                      />
+                      {moistureStatusText}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </Link>
+
+          {/* Gas Sensor Card */}
+          <Link href="/gas" className="group">
+            <div className="bg-linear-to-br from-gray-50 to-slate-50 rounded-3xl p-6 border border-gray-200 shadow-lg shadow-gray-100/50 hover:shadow-xl hover:shadow-gray-100/70 transition-all duration-300 hover:scale-[1.02] h-full">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-linear-to-br from-gray-500 to-slate-500 rounded-2xl flex items-center justify-center shadow-lg shadow-gray-200">
+                  <Cloud className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-800">
+                    Gas Sensor
+                  </h2>
+                  <p className="text-sm text-gray-500">Smoke & gas detection</p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-gray-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+
+              {gasLoading ? (
+                <div className="animate-pulse">
+                  <div className="h-24 bg-gray-200 rounded-xl mb-4" />
+                  <div className="h-6 w-24 bg-gray-200 rounded" />
+                </div>
+              ) : (
+                <>
+                  {/* Mini Chart Preview */}
+                  <div className="h-24 mb-4">
+                    {gasData.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={gasData}>
+                          <defs>
+                            <linearGradient
+                              id="colorGasPreview"
+                              x1="0"
+                              y1="0"
+                              x2="0"
+                              y2="1"
+                            >
+                              <stop
+                                offset="5%"
+                                stopColor="#6b7280"
+                                stopOpacity={0.6}
+                              />
+                              <stop
+                                offset="95%"
+                                stopColor="#6b7280"
+                                stopOpacity={0.1}
+                              />
+                            </linearGradient>
+                          </defs>
+                          <Area
+                            type="monotone"
+                            dataKey="gasPercentage"
+                            stroke="#6b7280"
+                            strokeWidth={2}
+                            fill="url(#colorGasPreview)"
+                            dot={false}
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="h-full flex items-center justify-center text-gray-400 text-sm">
+                        No data available
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Current Value */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-3xl font-bold text-gray-800">
+                        {currentGas !== null ? `${currentGas}%` : "—"}
+                      </span>
+                      <span className="text-sm text-gray-500 ml-2">
+                        {getGasDescription(currentGas)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-gray-600">
+                      <span
+                        className={`w-2 h-2 rounded-full ${
+                          gasStatusText === "Live"
+                            ? "bg-amber-500"
+                            : "bg-gray-500"
+                        } animate-pulse`}
+                      />
+                      {gasStatusText}
                     </div>
                   </div>
                 </>
