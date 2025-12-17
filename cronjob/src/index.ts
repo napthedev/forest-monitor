@@ -14,6 +14,8 @@ const SENSOR_PATHS = [
   "motion",
   "sound",
   "vibration",
+  "humidity",
+  "temperature",
 ];
 
 // Records older than this many days will be deleted
