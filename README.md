@@ -32,6 +32,21 @@ ESP32 sensors
 	- Runs daily at 00:00 UTC via `.github/workflows/delete-old-records.yml`
 	- Deletes records older than 3 days (configurable in `cronjob/src/index.ts`)
 
+## ESP32 sensor pin mapping
+
+Pin assignments are defined in `esp32/src/main.cpp`.
+
+| Sensor | Reading(s) | ESP32 pin (GPIO) | Input type |
+|---|---|---:|---|
+| Light sensor | `light` | 36 | Analog (ADC) |
+| Gas sensor (MQ-*) | `gas` | 39 | Analog (ADC) |
+| Flame sensor | `flame` | 34 | Analog (ADC) |
+| Soil moisture sensor | `soil-moisture` | 35 | Analog (ADC) |
+| Sound sensor | `sound` | 32 | Analog (ADC) |
+| PIR motion sensor | `motion` | 23 | Digital |
+| Vibration sensor | `vibration` | 19 | Digital |
+| DHT11 | `temperature`, `humidity` | 18 | Digital |
+
 ## Quick start
 
 1. **ESP32**: configure WiFi + Firebase credentials in `esp32/include/secrets.h`, then build/upload.
