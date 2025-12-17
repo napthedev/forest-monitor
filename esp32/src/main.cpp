@@ -6,9 +6,8 @@
 #include <WiFi.h>
 #include <WiFiClientSecure.h> // Include WiFiClientSecure
 
-// OLED Display libraries
-#include <Adafruit_GFX.h>
-#include <Adafruit_SH110X.h>
+// LCD Display library
+#include <LiquidCrystal_I2C.h>
 #include <Wire.h>
 
 // DHT11 Temperature & Humidity sensor library
@@ -54,12 +53,34 @@ bool usingPrimaryWiFi = false;
 // Sound sensor sampling window duration (100ms)
 #define SOUND_SAMPLING_DURATION_MS 100
 
-// OLED Display configuration
-#define SCREEN_WIDTH 128
-#define SCREEN_HEIGHT 64
-#define OLED_RESET -1
-#define I2C_ADDRESS 0x3C
+// LCD Display configuration
+#define LCD_COLS 20
+#define LCD_ROWS 4
+#define LCD_ADDRESS 0x27
 #define DISPLAY_UPDATE_INTERVAL 1000 // 1 second
+
+// Custom character indices
+#define CHAR_WIFI 0
+#define CHAR_IP 1
+#define CHAR_FIREBASE 2
+#define CHAR_SYNC 3
+
+// Custom character bitmaps (5x8 pixels)
+// WiFi antenna icon
+byte wifiChar[8] = {0b00000, 0b01110, 0b10001, 0b00100,
+                    0b01010, 0b00000, 0b00100, 0b00000};
+
+// IP/Network icon (grid pattern)
+byte ipChar[8] = {0b11111, 0b10001, 0b10001, 0b11111,
+                  0b10001, 0b10001, 0b11111, 0b00000};
+
+// Firebase/Cloud icon
+byte firebaseChar[8] = {0b00000, 0b01110, 0b11111, 0b11111,
+                        0b11111, 0b01110, 0b00000, 0b00000};
+
+// Sync/Clock icon
+byte syncChar[8] = {0b00000, 0b01110, 0b10101, 0b10111,
+                    0b10001, 0b01110, 0b00000, 0b00000};
 
 // PIR sensor state tracking
 int pirState = LOW;
@@ -79,8 +100,8 @@ LegacyToken legacy_token(FIREBASE_AUTH);
 FirebaseApp app;
 RealtimeDatabase Database;
 
-// OLED Display object
-Adafruit_SH1106G display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+// LCD Display object
+LiquidCrystal_I2C lcd(LCD_ADDRESS, LCD_COLS, LCD_ROWS);
 
 // DHT sensor object
 DHT dht(DHT_SENSOR_PIN, DHTTYPE);
@@ -89,46 +110,52 @@ DHT dht(DHT_SENSOR_PIN, DHTTYPE);
 unsigned long lastDisplayUpdate = 0;
 unsigned long lastSuccessfulSync = 0;
 
-// Function to update OLED display with current status
+// Function to update LCD display with current status
 void updateDisplay() {
-  display.clearDisplay();
-  display.setCursor(0, 0);
+  lcd.clear();
 
-  // WiFi Status
-  display.print("WiFi: ");
+  // Row 0: WiFi Status (icon + SSID)
+  lcd.setCursor(0, 0);
+  lcd.write(CHAR_WIFI);
+  lcd.print(" ");
   if (WiFi.status() == WL_CONNECTED) {
-    display.println(WiFi.SSID());
+    String ssid = WiFi.SSID();
+    lcd.print(ssid.substring(0, 18)); // Truncate to fit
   } else {
-    display.println("Disconnected");
+    lcd.print("Disconnected");
   }
 
-  // IP Address
-  display.print("IP: ");
+  // Row 1: IP Address (icon + IP)
+  lcd.setCursor(0, 1);
+  lcd.write(CHAR_IP);
+  lcd.print(" ");
   if (WiFi.status() == WL_CONNECTED) {
-    display.println(WiFi.localIP());
+    lcd.print(WiFi.localIP());
   } else {
-    display.println("N/A");
+    lcd.print("N/A");
   }
 
-  // Firebase Status
-  display.print("Firebase: ");
-  display.println(app.ready() ? "Connected" : "Disconnected");
+  // Row 2: Firebase Status (icon + status)
+  lcd.setCursor(0, 2);
+  lcd.write(CHAR_FIREBASE);
+  lcd.print(" Firebase:");
+  lcd.print(app.ready() ? "OK" : "NO");
 
-  // Last Sync Time
-  display.print("Last sync: ");
+  // Row 3: Last Sync Time (icon + time)
+  lcd.setCursor(0, 3);
+  lcd.write(CHAR_SYNC);
+  lcd.print(" Sync:");
   if (lastSuccessfulSync == 0) {
-    display.println("Never");
+    lcd.print("Never");
   } else {
     unsigned long elapsed = (millis() - lastSuccessfulSync) / 1000;
     if (elapsed == 0) {
-      display.println("Just now");
+      lcd.print("Just now");
     } else {
-      display.print(elapsed);
-      display.println("s ago");
+      lcd.print(elapsed);
+      lcd.print("s ago");
     }
   }
-
-  display.display();
 }
 
 // Function to connect to primary WiFi (WPA2-Personal)
@@ -228,23 +255,23 @@ void setup() {
   Serial.begin(115200);
   delay(1000);
 
-  // Initialize OLED display
+  // Initialize LCD display
   Wire.begin(21, 22); // SDA=21, SCL=22
   delay(250);         // Wait for display to power up
 
-  if (!display.begin(I2C_ADDRESS, true)) {
-    Serial.println("OLED display initialization failed!");
-    for (;;)
-      ; // Halt execution
-  }
+  lcd.init();
+  lcd.backlight();
 
-  display.clearDisplay();
-  display.setTextSize(1, 2);
-  display.setTextColor(SH110X_WHITE);
-  display.setCursor(0, 0);
-  display.println("Initializing...");
-  display.display();
-  Serial.println("OLED display initialized.");
+  // Register custom characters
+  lcd.createChar(CHAR_WIFI, wifiChar);
+  lcd.createChar(CHAR_IP, ipChar);
+  lcd.createChar(CHAR_FIREBASE, firebaseChar);
+  lcd.createChar(CHAR_SYNC, syncChar);
+
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Initializing...");
+  Serial.println("LCD display initialized.");
 
   // Initialize PIR sensor pin
   pinMode(PIR_SENSOR_PIN, INPUT);
@@ -408,7 +435,7 @@ void loop() {
     lastSuccessfulSync = millis();
   }
 
-  // Update OLED display every second
+  // Update LCD display every second
   if (millis() - lastDisplayUpdate >= DISPLAY_UPDATE_INTERVAL) {
     lastDisplayUpdate = millis();
     updateDisplay();
