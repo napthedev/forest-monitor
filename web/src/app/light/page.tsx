@@ -358,7 +358,10 @@ export default function LightSensorPage() {
                     }}
                     labelStyle={{ color: "#c2410c", fontWeight: 600 }}
                     itemStyle={{ color: "#ea580c" }}
-                    formatter={(value: number) => [`${value}%`, "Light Level"]}
+                    formatter={(value: number | undefined) => [
+                      value == null ? "N/A" : `${value}%`,
+                      "Light Level",
+                    ]}
                     labelFormatter={(label) => formatTime(label)}
                   />
                   <Area

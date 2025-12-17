@@ -388,7 +388,10 @@ export default function FlameSensorPage() {
                     }}
                     labelStyle={{ color: "#b91c1c", fontWeight: 600 }}
                     itemStyle={{ color: "#dc2626" }}
-                    formatter={(value: number) => [`${value}%`, "Flame Level"]}
+                    formatter={(value: number | undefined) => [
+                      `${value ?? 0}%`,
+                      "Flame Level",
+                    ]}
                     labelFormatter={(label) => formatTime(label)}
                   />
                   <Area

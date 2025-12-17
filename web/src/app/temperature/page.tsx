@@ -361,7 +361,10 @@ export default function TemperatureSensorPage() {
                     }}
                     labelStyle={{ color: "#374151", fontWeight: 600 }}
                     itemStyle={{ color: "#f97316" }}
-                    formatter={(value: number) => [`${value}°C`, "Temperature"]}
+                    formatter={(value: number | undefined) => [
+                      value == null ? "N/A" : `${value}°C`,
+                      "Temperature",
+                    ]}
                     labelFormatter={(label) => formatTime(label)}
                   />
                   <Area

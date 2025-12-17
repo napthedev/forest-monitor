@@ -375,7 +375,10 @@ export default function SoundSensorPage() {
                     }}
                     labelStyle={{ color: "#0891b2", fontWeight: 600 }}
                     itemStyle={{ color: "#06b6d4" }}
-                    formatter={(value: number) => [`${value}%`, "Sound Level"]}
+                    formatter={(value: number | undefined) => [
+                      value == null ? "N/A" : `${value}%`,
+                      "Sound Level",
+                    ]}
                     labelFormatter={(label) => formatTime(label)}
                   />
                   <Area

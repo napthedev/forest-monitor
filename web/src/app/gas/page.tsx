@@ -358,7 +358,10 @@ export default function GasSensorPage() {
                     }}
                     labelStyle={{ color: "#374151", fontWeight: 600 }}
                     itemStyle={{ color: "#6b7280" }}
-                    formatter={(value: number) => [`${value}%`, "Gas Level"]}
+                    formatter={(value: number | undefined) => [
+                      `${value ?? 0}%`,
+                      "Gas Level",
+                    ]}
                     labelFormatter={(label) => formatTime(label)}
                   />
                   <Area

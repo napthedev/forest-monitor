@@ -366,8 +366,8 @@ export default function SoilMoistureSensorPage() {
                     }}
                     labelStyle={{ color: "#92400e", fontWeight: 600 }}
                     itemStyle={{ color: "#b45309" }}
-                    formatter={(value: number) => [
-                      `${value}%`,
+                    formatter={(value: number | undefined) => [
+                      value == null ? "N/A" : `${value}%`,
                       "Moisture Level",
                     ]}
                     labelFormatter={(label) => formatTime(label)}

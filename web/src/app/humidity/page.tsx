@@ -352,7 +352,10 @@ export default function HumiditySensorPage() {
                     }}
                     labelStyle={{ color: "#374151", fontWeight: 600 }}
                     itemStyle={{ color: "#38bdf8" }}
-                    formatter={(value: number) => [`${value}%`, "Humidity"]}
+                    formatter={(value: number | undefined) => [
+                      value == null ? "N/A" : `${value}%`,
+                      "Humidity",
+                    ]}
                     labelFormatter={(label) => formatTime(label)}
                   />
                   <Area
