@@ -14,14 +14,12 @@ Live demo: https://forest-monitor.vercel.app/
 
 ## End-to-end flow
 
-```mermaid
-flowchart LR
-	ESP32[ESP32 + sensors] -->|Connects to WiFi (primary / enterprise fallback)| NET[Network]
-	NET -->|Writes readings| RTDB[(Firebase Realtime Database)]
-	RTDB -->|Realtime subscriptions| WEB[Next.js dashboard]
-	GA[GitHub Actions (daily cron)] --> CLEAN[Cleanup job]
-	CLEAN -->|Deletes records older than retention window| RTDB
-```
+ESP32 sensors
+→ connect to WiFi (primary / enterprise fallback)
+→ write readings to Firebase Realtime Database
+→ Next.js dashboard subscribes and displays live updates
+→ GitHub Actions runs a daily cleanup job
+→ cleanup deletes records older than the retention window
 
 ## What’s in this repo
 
