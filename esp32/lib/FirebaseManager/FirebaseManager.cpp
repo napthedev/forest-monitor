@@ -74,56 +74,89 @@ bool FirebaseManager::uploadEvent(const EventData &event) {
 }
 
 String FirebaseManager::buildBatchJson(SensorData *dataArray, int count) {
-  String batchJson = "{";
+  // Calculate averages and max values across the batch
+  unsigned long lightSum = 0, gasSum = 0, flameSum = 0, soilSum = 0;
+  unsigned int soundMax = 0;
+  float tempSum = 0.0, humSum = 0.0;
+  int tempValidCount = 0, humValidCount = 0;
 
   for (int i = 0; i < count; i++) {
     SensorData &data = dataArray[i];
 
-    // Generate unique keys for each sensor record
-    String lightKey = generatePushId();
-    String gasKey = generatePushId();
-    String flameKey = generatePushId();
-    String soilKey = generatePushId();
-    String soundKey = generatePushId();
+    // Sum analog sensor values
+    lightSum += data.lightValue;
+    gasSum += data.gasValue;
+    flameSum += data.flameValue;
+    soilSum += data.soilMoistureValue;
 
-    // Add analog sensor data
-    if (i > 0)
-      batchJson += ",";
+    // Track maximum sound amplitude (peak-to-peak)
+    if (data.soundAmplitude > soundMax) {
+      soundMax = data.soundAmplitude;
+    }
 
-    batchJson += "\"/sensors/light/" + lightKey +
-                 "\":{\"value\":" + String(data.lightValue) +
-                 ",\"timestamp\":{\".sv\":\"timestamp\"}},";
-
-    batchJson += "\"/sensors/gas/" + gasKey +
-                 "\":{\"value\":" + String(data.gasValue) +
-                 ",\"timestamp\":{\".sv\":\"timestamp\"}},";
-
-    batchJson += "\"/sensors/flame/" + flameKey +
-                 "\":{\"value\":" + String(data.flameValue) +
-                 ",\"timestamp\":{\".sv\":\"timestamp\"}},";
-
-    batchJson += "\"/sensors/soil-moisture/" + soilKey +
-                 "\":{\"value\":" + String(data.soilMoistureValue) +
-                 ",\"timestamp\":{\".sv\":\"timestamp\"}},";
-
-    batchJson += "\"/sensors/sound/" + soundKey +
-                 "\":{\"amplitude\":" + String(data.soundAmplitude) +
-                 ",\"timestamp\":{\".sv\":\"timestamp\"}}";
-
-    // Add temperature and humidity if valid
+    // Sum valid temperature and humidity readings
     if (data.temperatureValid) {
-      String tempKey = generatePushId();
-      batchJson += ",\"/sensors/temperature/" + tempKey +
-                   "\":{\"value\":" + String(data.temperature, 1) +
-                   ",\"timestamp\":{\".sv\":\"timestamp\"}}";
+      tempSum += data.temperature;
+      tempValidCount++;
     }
-
     if (data.humidityValid) {
-      String humKey = generatePushId();
-      batchJson += ",\"/sensors/humidity/" + humKey +
-                   "\":{\"value\":" + String(data.humidity, 1) +
-                   ",\"timestamp\":{\".sv\":\"timestamp\"}}";
+      humSum += data.humidity;
+      humValidCount++;
     }
+  }
+
+  // Calculate averages
+  unsigned int lightAvg = lightSum / count;
+  unsigned int gasAvg = gasSum / count;
+  unsigned int flameAvg = flameSum / count;
+  unsigned int soilAvg = soilSum / count;
+  float tempAvg = (tempValidCount > 0) ? (tempSum / tempValidCount) : 0.0;
+  float humAvg = (humValidCount > 0) ? (humSum / humValidCount) : 0.0;
+
+  // Build JSON with averaged values (one record per sensor type)
+  String batchJson = "{";
+
+  // Generate unique keys for each sensor type
+  String lightKey = generatePushId();
+  String gasKey = generatePushId();
+  String flameKey = generatePushId();
+  String soilKey = generatePushId();
+  String soundKey = generatePushId();
+
+  // Add analog sensor data with averaged values
+  batchJson += "\"/sensors/light/" + lightKey +
+               "\":{\"value\":" + String(lightAvg) +
+               ",\"timestamp\":{\".sv\":\"timestamp\"}},";
+
+  batchJson += "\"/sensors/gas/" + gasKey + "\":{\"value\":" + String(gasAvg) +
+               ",\"timestamp\":{\".sv\":\"timestamp\"}},";
+
+  batchJson += "\"/sensors/flame/" + flameKey +
+               "\":{\"value\":" + String(flameAvg) +
+               ",\"timestamp\":{\".sv\":\"timestamp\"}},";
+
+  batchJson += "\"/sensors/soil-moisture/" + soilKey +
+               "\":{\"value\":" + String(soilAvg) +
+               ",\"timestamp\":{\".sv\":\"timestamp\"}},";
+
+  batchJson += "\"/sensors/sound/" + soundKey +
+               "\":{\"value\":" + String(soundMax) +
+               ",\"timestamp\":{\".sv\":\"timestamp\"}}";
+
+  // Add temperature if any valid readings exist
+  if (tempValidCount > 0) {
+    String tempKey = generatePushId();
+    batchJson += ",\"/sensors/temperature/" + tempKey +
+                 "\":{\"value\":" + String(tempAvg, 1) +
+                 ",\"timestamp\":{\".sv\":\"timestamp\"}}";
+  }
+
+  // Add humidity if any valid readings exist
+  if (humValidCount > 0) {
+    String humKey = generatePushId();
+    batchJson += ",\"/sensors/humidity/" + humKey +
+                 "\":{\"value\":" + String(humAvg, 1) +
+                 ",\"timestamp\":{\".sv\":\"timestamp\"}}";
   }
 
   batchJson += "}";

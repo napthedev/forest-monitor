@@ -31,7 +31,7 @@ import {
 
 interface SensorData {
   timestamp: string;
-  amplitude: number;
+  value: number;
   soundPercentage: number;
 }
 
@@ -77,14 +77,14 @@ export default function SoundSensorPage() {
       if (data) {
         const formattedData: SensorData[] = Object.entries(data).map(
           ([, record]) => {
-            const { timestamp, amplitude } = record as {
+            const { timestamp, value } = record as {
               timestamp: number;
-              amplitude: number;
+              value: number;
             };
             return {
               timestamp: String(timestamp),
-              amplitude,
-              soundPercentage: convertToSoundPercentage(amplitude),
+              value,
+              soundPercentage: convertToSoundPercentage(value),
             };
           }
         );
