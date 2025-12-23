@@ -37,7 +37,7 @@ The app reads from Firebase Realtime Database under:
 - `/sensors/soil-moisture`
 - `/sensors/gas`
 
-Records are expected to include a `timestamp` (milliseconds since epoch). Some sensors also include a raw value field (for example `value` or `amplitude`) which is converted to a percentage or unit for display.
+Records are expected to include a `timestamp` (milliseconds since epoch). Some sensors also include a raw value field (for example `value` or `value`) which is converted to a percentage or unit for display.
 
 ## Configuration
 

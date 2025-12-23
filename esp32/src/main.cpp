@@ -36,7 +36,7 @@ void setup() {
   delay(1000);
   Serial.println("\n\n=== ESP32 Forest Monitor - FreeRTOS Version ===");
 
-  // Create I2C mutex for LCD and DHT11 sharing
+  // Create I2C mutex for LCD display on I2C bus (SDA=21, SCL=22)
   i2cMutex = xSemaphoreCreateMutex();
   if (i2cMutex == NULL) {
     Serial.println("ERROR: Failed to create I2C mutex!");
@@ -49,8 +49,8 @@ void setup() {
   displayManager.begin(i2cMutex);
   displayManager.showInitMessage();
 
-  // Create sensor data queue (size 10)
-  sensorDataQueue = xQueueCreate(10, sizeof(SensorData));
+  // Create sensor data queue (size 100)
+  sensorDataQueue = xQueueCreate(100, sizeof(SensorData));
   if (sensorDataQueue == NULL) {
     Serial.println("ERROR: Failed to create sensor data queue!");
     while (true) {
@@ -58,8 +58,8 @@ void setup() {
     }
   }
 
-  // Create event queue (size 20)
-  eventQueue = xQueueCreate(20, sizeof(EventData));
+  // Create event queue (size 100)
+  eventQueue = xQueueCreate(100, sizeof(EventData));
   if (eventQueue == NULL) {
     Serial.println("ERROR: Failed to create event queue!");
     while (true) {

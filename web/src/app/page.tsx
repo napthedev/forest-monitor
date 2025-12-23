@@ -558,13 +558,13 @@ export default function Home() {
       if (data) {
         const formattedData: SoundSensorData[] = Object.entries(data).map(
           ([, record]) => {
-            const { timestamp, amplitude } = record as {
+            const { timestamp, value } = record as {
               timestamp: number;
-              amplitude: number;
+              value: number;
             };
             return {
               timestamp: String(timestamp),
-              soundPercentage: convertToSoundPercentage(amplitude),
+              soundPercentage: convertToSoundPercentage(value),
             };
           }
         );

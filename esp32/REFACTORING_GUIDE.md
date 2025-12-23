@@ -46,7 +46,7 @@ This project has been refactored from a monolithic single-loop architecture to a
 ### Digital Sensors (`lib/DigitalSensors/`)
 - PIR motion sensor (GPIO23) - Interrupt-driven
 - Vibration sensor (GPIO19) - Interrupt-driven
-- DHT11 temp/humidity (GPIO18) - I2C with mutex protection
+- DHT11 temp/humidity (GPIO18) - Single-wire protocol, accessed only by SensorTask
 - ISR handlers use `xTaskNotifyFromISR()` for minimal interrupt time
 
 ### Display Manager (`lib/DisplayManager/`)
@@ -67,7 +67,7 @@ This project has been refactored from a monolithic single-loop architecture to a
 - **eventQueue**: Size 20, holds `EventData` for motion/vibration
 
 ### Mutex
-- **i2cMutex**: Protects I2C bus shared by LCD and DHT11
+- **i2cMutex**: Protects I2C bus (SDA=21, SCL=22) used by LCD display. DHT11 uses separate GPIO 18 with single-wire protocol and requires no mutex since only SensorTask accesses it.
 
 ### Queue Full Detection
 - When sensor queue is full, data is dropped with counter increment

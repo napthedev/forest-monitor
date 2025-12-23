@@ -10,7 +10,7 @@ struct SensorData {
   int gasValue;
   int flameValue;
   int soilMoistureValue;
-  int soundAmplitude;
+  int soundValue;
 
   // DHT11 sensor values
   float temperature;
@@ -26,7 +26,7 @@ struct SensorData {
   // Constructor with default values
   SensorData()
       : lightValue(0), gasValue(0), flameValue(0), soilMoistureValue(0),
-        soundAmplitude(0), temperature(0.0f), humidity(0.0f), timestamp(0),
+        soundValue(0), temperature(0.0f), humidity(0.0f), timestamp(0),
         temperatureValid(false), humidityValid(false) {}
 };
 

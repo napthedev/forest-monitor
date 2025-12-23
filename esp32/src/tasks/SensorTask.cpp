@@ -83,22 +83,15 @@ void sensorTask(void *parameter) {
     data.gasValue = analogSensors.readGas();
     data.flameValue = analogSensors.readFlame();
     data.soilMoistureValue = analogSensors.readSoilMoisture();
-    data.soundAmplitude = analogSensors.readSoundAmplitude();
+    data.soundValue = analogSensors.readSoundValue();
 
-    // Read DHT11 sensor (requires I2C mutex)
-    if (xSemaphoreTake(i2cMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
-      data.temperature = digitalSensors.readTemperature();
-      data.humidity = digitalSensors.readHumidity();
-      xSemaphoreGive(i2cMutex);
+    // Read DHT11 sensor (single-wire protocol, no mutex needed)
+    data.temperature = digitalSensors.readTemperature();
+    data.humidity = digitalSensors.readHumidity();
 
-      // Validate readings
-      data.temperatureValid = digitalSensors.isValidReading(data.temperature);
-      data.humidityValid = digitalSensors.isValidReading(data.humidity);
-    } else {
-      // Mutex not available, mark as invalid
-      data.temperatureValid = false;
-      data.humidityValid = false;
-    }
+    // Validate readings
+    data.temperatureValid = digitalSensors.isValidReading(data.temperature);
+    data.humidityValid = digitalSensors.isValidReading(data.humidity);
 
     data.timestamp = millis();
 
@@ -113,7 +106,7 @@ void sensorTask(void *parameter) {
       Serial.printf(
           "Sensor data queued: Light=%d, Gas=%d, Flame=%d, Soil=%d, Sound=%d\n",
           data.lightValue, data.gasValue, data.flameValue,
-          data.soilMoistureValue, data.soundAmplitude);
+          data.soilMoistureValue, data.soundValue);
       if (data.temperatureValid && data.humidityValid) {
         Serial.printf("Temperature: %.1f°C, Humidity: %.1f%%\n",
                       data.temperature, data.humidity);

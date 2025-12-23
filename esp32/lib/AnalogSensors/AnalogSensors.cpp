@@ -19,7 +19,7 @@ int AnalogSensors::readSoilMoisture() {
   return analogRead(SOIL_MOISTURE_SENSOR_PIN);
 }
 
-int AnalogSensors::readSoundAmplitude() {
+int AnalogSensors::readSoundValue() {
   unsigned long startTime = millis();
   int minValue = 4095;
   int maxValue = 0;
@@ -39,11 +39,10 @@ int AnalogSensors::readSoundAmplitude() {
     taskYIELD();
   }
 
-  // Calculate peak-to-peak amplitude
-  int amplitude = maxValue - minValue;
+  // Calculate peak-to-peak value
+  int value = maxValue - minValue;
 
-  Serial.printf("Sound: min=%d, max=%d, amplitude=%d\n", minValue, maxValue,
-                amplitude);
+  Serial.printf("Sound: min=%d, max=%d, value=%d\n", minValue, maxValue, value);
 
-  return amplitude;
+  return value;
 }

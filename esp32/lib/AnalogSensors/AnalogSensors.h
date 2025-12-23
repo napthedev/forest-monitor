@@ -27,8 +27,8 @@ public:
   int readFlame();
   int readSoilMoisture();
 
-  // Read sound amplitude over sampling window (non-blocking with yields)
-  int readSoundAmplitude();
+  // Read sound value over sampling window (non-blocking with yields)
+  int readSoundValue();
 
 private:
   // No state needed for basic analog reads

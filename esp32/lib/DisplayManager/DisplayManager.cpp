@@ -89,11 +89,14 @@ void DisplayManager::updateStatus(const String &ssid, const String &ip,
   // Row 2: Firebase Status (icon + status) + Dropped packets
   _lcd.setCursor(0, 2);
   _lcd.write(CHAR_FIREBASE);
-  _lcd.print(" FB:");
-  _lcd.print(firebaseReady ? "OK" : "NO");
   if (droppedPackets > 0) {
+    _lcd.print(" FB:");
+    _lcd.print(firebaseReady ? "OK" : "NO");
     _lcd.print(" Drop:");
     _lcd.print(droppedPackets);
+  } else {
+    _lcd.print(" Firebase:");
+    _lcd.print(firebaseReady ? "OK" : "NO");
   }
 
   // Row 3: Last Sync Time (icon + time)

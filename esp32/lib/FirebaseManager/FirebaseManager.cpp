@@ -89,9 +89,9 @@ String FirebaseManager::buildBatchJson(SensorData *dataArray, int count) {
     flameSum += data.flameValue;
     soilSum += data.soilMoistureValue;
 
-    // Track maximum sound amplitude (peak-to-peak)
-    if (data.soundAmplitude > soundMax) {
-      soundMax = data.soundAmplitude;
+    // Track maximum sound value (peak-to-peak)
+    if (data.soundValue > soundMax) {
+      soundMax = data.soundValue;
     }
 
     // Sum valid temperature and humidity readings

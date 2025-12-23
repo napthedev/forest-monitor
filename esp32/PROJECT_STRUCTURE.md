@@ -75,7 +75,7 @@ esp32/
 - **AnalogSensors.h**: Sensor pin definitions + interface
 - **AnalogSensors.cpp**:
   - Read light, gas, flame, soil moisture sensors
-  - Sound amplitude sampling with `taskYIELD()`
+  - Sound value sampling with `taskYIELD()`
   - All use ADC1 pins (WiFi-safe)
 
 #### DigitalSensors (92 lines total)
