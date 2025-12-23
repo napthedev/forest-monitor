@@ -87,14 +87,37 @@ The 20x4 LCD display uses I2C communication and is defined in `esp32/lib/Display
 
 ## Quick start
 
-1. **ESP32**: configure WiFi + Firebase credentials in `esp32/include/secrets.h`, then build/upload.
-	 - Details: [esp32/README.md](esp32/README.md)
-2. **Web**: set Firebase client env vars in `web/.env.local`, then run `pnpm install && pnpm dev`.
-	 - Details: [web/README.md](web/README.md)
-3. **Cleanup**: add GitHub Actions secrets `FIREBASE_DATABASE_URL` and `FIREBASE_AUTH_TOKEN`.
-	 - Details: [cronjob/SETUP.md](cronjob/SETUP.md)
+### 1. ESP32 firmware setup
+1. Create `esp32/include/secrets.h` with WiFi and Firebase credentials (see template in [esp32/README.md](esp32/README.md))
+2. Open `esp32/` in VS Code with PlatformIO extension
+3. Build and upload: `pio run -t upload`
+4. Monitor serial output: `pio run -t monitor`
+
+### 2. Web dashboard setup
+1. Create `web/.env.local` with Firebase web config (see [web/README.md](web/README.md))
+2. Install dependencies: `pnpm install`
+3. Run dev server: `pnpm dev`
+4. Open http://localhost:3000
+
+### 3. Cleanup job setup
+1. Add GitHub Actions secrets:
+   - `FIREBASE_DATABASE_URL` (e.g., `https://your-project.firebaseio.com`)
+   - `FIREBASE_AUTH_TOKEN` (Firebase legacy database secret)
+2. Workflow runs automatically at 00:00 UTC daily
+3. Manual trigger: Actions → Delete Old Sensor Records → Run workflow
+
+See [cronjob/SETUP.md](cronjob/SETUP.md) for detailed instructions.
+
+## Development
+
+- **ESP32**: PlatformIO commands in [esp32/README.md](esp32/README.md)
+- **Web**: `pnpm dev` (development) | `pnpm build` (production) | `pnpm lint` (ESLint)
+- **Cronjob**: Runs on GitHub Actions (can test locally with `npm start` in `cronjob/`)
 
 ## Notes
 
-- `web/.env.local` and `esp32/include/secrets.h` are intentionally ignored—don’t commit secrets.
+- `web/.env.local` and `esp32/include/secrets.h` are intentionally ignored—never commit secrets
+- Queue sizes: 100 items each (configurable in `esp32/src/main.cpp`)
+- Retention period: 3 days (configurable in `cronjob/src/index.ts`)
+- Firebase batch size: 10 readings (configurable in `esp32/src/tasks/CloudTask.cpp`)
 
